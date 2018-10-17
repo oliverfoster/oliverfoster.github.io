@@ -1,0 +1,38 @@
+
+html, body {
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+
+body {
+  overflow-y: scroll;
+}
+
+.content-title {
+  text-align: center;
+  position: fixed;
+  width: 100%;
+  height: 32px;
+  background: white;
+}
+
+.content-container {
+  padding-top: 32px;
+  text-align: center;
+}
+
+.queues-item {
+  display: inline-block;
+  overflow: hidden;
+  height: 300px;
+  width:  200px;
+  cursor: pointer;
+  padding: 10px;
+  margin:  10px;
+  border: 1px solid black;
+}
+
+.queues-item .title {
+  font-weight: bold;
+}
