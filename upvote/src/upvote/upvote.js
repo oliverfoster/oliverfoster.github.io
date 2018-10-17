@@ -110,11 +110,11 @@ var Upvote = View.extend({
   </div>
   <div class="content-title">
     <div class="inner">
-      <a href="${this.model.queue.htmlUrl}" target="_blank">${this.model.queue.title}</a>
+      <a href="${this.model.queue.htmlUrl}" target="_blank">${this.model.queue.title} <span class="issue-number">#${this.model.queue.number}</span></a>
     </div>
   </div>
   <div class="content-body">
-    <div class="inner">
+    <div class="inner markdown">
       ${converter.makeHtml(this.model.queue.body)}
     </div>
   </div>
@@ -297,10 +297,6 @@ var LoginView = View.extend({
     upvote.router.push("#queues");
   },
 
-  onAuthenticate: function() {
-    location.href = `https://github.com/login/oauth/authorize?client_id=${upvote.client_id}&scope=public_repo`;
-  },
-
   attach: function() {
     if (upvote.router.cookie.oauth) {
       upvote.octo = new Octokat({
@@ -314,13 +310,23 @@ var LoginView = View.extend({
   template: function() {
     return `
 <div view-container="true" id="${this.id}">
-  <div class="sso">
-    <button onclick="this.view.onAuthenticate();">Single sign-on</button>
-  </div>
   <div class="login">
-    <label>Username</label><input id="username" autocomplete="current-username" type="text" onchange="this.view.model.username = this.value" />
-    <label>password</label><input id="password" autocomplete="current-password" type="password" onchange="this.view.model.password = this.value" />
-    <button onclick="this.view.onClick();">Login</button>
+    <div class="inner">
+      <div class="username">
+        <label>Username (not email address)</label>
+        <input id="username" autocomplete="current-username" type="text" onchange="this.view.model.username = this.value" />
+      </div>
+      <div class="password">
+        <label>Password</label>
+        <input id="password" autocomplete="current-password" type="password" onchange="this.view.model.password = this.value" />
+      </div>
+      <button class="btn" onclick="this.view.onClick();">Login</button>
+      <div class="sso">
+        <div class="inner">
+        Or try single sign-on through <a href="https://github.com/login/oauth/authorize?client_id=${upvote.client_id}&scope=public_repo">GitHub</a>?
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 `;
@@ -359,21 +365,15 @@ var UpvoteQueuesItemView = View.extend({
     upvote.router.push("#queue");
   },
 
-  onOpen: function(event) {
-    window.open(this.model.htmlUrl);
-    event.stopPropagation();
-  },
-
   template: function() {
     return `
 <div view-container="true" id="${this.id}" class="queues-item tile" onclick="this.view.onClick(event);">
   <div class="inner">
     <div class="menubar">
-      <button class="open" onclick="this.view.onOpen(event);">Open</button>
     </div>
     <div class="content">
-      <div class="title">${this.model.title}</div>
-      <div class="body">${converter.makeHtml(this.model.body)}</div>
+      <div class="title"><h1><a href="${this.model.htmlUrl}">${this.model.title}</a> <span class="issue-number">#${this.model.number}</span></h1></div>
+      <div class="body markdown">${converter.makeHtml(this.model.body)}</div>
     </div>
   </div>
 </div>
@@ -409,11 +409,6 @@ var UpvoteQueueView = View.extend({
 
 var UpvoteQueueItemView = View.extend({
 
-  onOpen: function(event) {
-    window.open(this.model.referenceComment.htmlUrl);
-    event.stopPropagation();
-  },
-
   template: function() {
     return `
 <div view-container="true" id="${this.id}" class="queue-item tile">
@@ -423,11 +418,10 @@ var UpvoteQueueItemView = View.extend({
       <button class="down" onclick="this.view.onDown(event);">Down</button>
       <button class="include" onclick="this.view.onInclude(event);">Include</button>
       <button class="exclude" onclick="this.view.onExclude(event);">Exclude</button>
-      <button class="open" onclick="this.view.onOpen(event);">Open</button>
     </div>
     <div class="content">
-      <div class="title"><a href="${this.model.referenceComment.htmlUrl}" target="_blank">${this.model.title}</a></div>
-      <div class="body">${converter.makeHtml(this.model.body)}</div>
+      <div class="title"><h1><a href="${this.model.referenceComment.htmlUrl}" target="_blank">${this.model.title} <span class="issue-number">#${this.model.number}</span></a></h1></div>
+      <div class="body markdown">${converter.makeHtml(this.model.body)}</div>
       <div class="votes">
         <div class="up">
           <div class="text">up votes: ${this.model.referenceComment.upVotes}</div>
