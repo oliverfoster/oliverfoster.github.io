@@ -13,14 +13,46 @@ html, body, #wrapper {
   flex-direction: column;
 }
 
-.content-title {
+.content-navigation {
+  font-weight: 600;
   text-align: left;
   width: 100%;
-  padding:  12px 0;
+  padding:  12px 10px;
   background: black;
   color: white;
 }
 
+.content-navigation ul {
+  display: inline-block;
+  list-style-type: none;
+  margin: 0;
+  padding: 10px 0 10px 20px;
+  vertical-align: top;
+}
+
+.content-navigation li {
+  display:  inline-block;
+  padding: 0 10px 0 0;
+}
+
+.content-navigation li:last-child {
+  color: darkgrey;
+}
+
+.content-title {
+  font-weight: 700;
+  background: black;
+  color: white;
+  padding: 6px 10px 10px;
+  border-top: 1px solid darkgray;
+}
+
+.content-body {
+  padding: 0 20px;
+}
+
+
+.content-navigation a,
 .content-title a {
   color: white;
   text-decoration: none;
@@ -35,10 +67,12 @@ html, body, #wrapper {
 .tile {
   display: block;
   overflow: hidden;
-  width:  100%;
+  max-width: 980px;
   min-height:  150px;
   cursor: pointer;
   border-bottom: 1px solid darkgray;
+  margin: auto;
+  padding: 20px;
 }
 
 .tile:nth-child(even) {
@@ -49,16 +83,24 @@ html, body, #wrapper {
   font-weight: bold;
 }
 
+.tile .title a {
+  color:  black;
+  text-decoration: none;
+}
+
 .tile .inner {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   height: 100%;
 }
 
 .tile .content {
   flex: 1;
+  padding: 20px;
 }
 
 .tile .menubar {
-  height:  32px;
+  height: 100%;
+  width: 64px;
+  order: 1;
 }

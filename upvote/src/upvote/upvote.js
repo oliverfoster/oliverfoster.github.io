@@ -70,7 +70,13 @@ var Upvote = View.extend({
       case "#login":
         return `
 <div view-container="true" id="${this.id}" class="login">
-  <div class="content-title">Github Login</div>
+  <div class="content-navigation">
+    <img class="logo logo-light" alt="Adapt Learning" src="https://www.adaptlearning.org/wp-content/uploads/2016/01/nav_logo_white-alt-2-1.png">
+    <ul>
+      <li>Upvoter:</li>
+      <li>Login with GitHub</li>
+    </ul>
+  </div>
   <div class="content-container">
     ${seat({ class: LoginView, id: "login" })}
   </div>
@@ -79,7 +85,13 @@ var Upvote = View.extend({
       case "#queues":
         return `
 <div view-container="true" id="${this.id}" class="queues">
-  <div class="content-title">Votes</div>
+  <div class="content-navigation">
+    <img class="logo logo-light" alt="Adapt Learning" src="https://www.adaptlearning.org/wp-content/uploads/2016/01/nav_logo_white-alt-2-1.png">
+    <ul>
+      <li>Upvoter:</li>
+      <li>Votes</li>
+    </ul>
+  </div>
   <div class="content-container">
     ${seat({ class: UpvoteQueuesView, model: this.model, id: "queues" })}
   </div>
@@ -88,11 +100,22 @@ var Upvote = View.extend({
       case "#queue":
         return `
 <div view-container="true" id="${this.id}" class="queue">
+  <div class="content-navigation">
+    <img class="logo logo-light" alt="Adapt Learning" src="https://www.adaptlearning.org/wp-content/uploads/2016/01/nav_logo_white-alt-2-1.png">
+    <ul>
+      <li>Upvoter:</li>
+      <li><a href="#queues">Votes</a></li>
+      <li>Issues</li>
+    </ul>
+  </div>
   <div class="content-title">
-    <button class="back" onclick="this.view.onBack(event);">Back</button>
-    Vote for issues
-    <div class="content-subtitle">
-    <a href="${this.model.queue.htmlUrl}" target="_blank">${this.model.queue.title}</a>
+    <div class="inner">
+      <a href="${this.model.queue.htmlUrl}" target="_blank">${this.model.queue.title}</a>
+    </div>
+  </div>
+  <div class="content-body">
+    <div class="inner">
+      ${converter.makeHtml(this.model.queue.body)}
     </div>
   </div>
   <div class="content-container">
@@ -403,7 +426,7 @@ var UpvoteQueueItemView = View.extend({
       <button class="open" onclick="this.view.onOpen(event);">Open</button>
     </div>
     <div class="content">
-      <div class="title">${this.model.title}</div>
+      <div class="title"><a href="${this.model.referenceComment.htmlUrl}" target="_blank">${this.model.title}</a></div>
       <div class="body">${converter.makeHtml(this.model.body)}</div>
       <div class="votes">
         <div class="up">
