@@ -22,7 +22,7 @@ body {
   text-align: center;
 }
 
-.queues-item {
+.tile {
   display: inline-block;
   overflow: hidden;
   height: 300px;
@@ -33,6 +33,20 @@ body {
   border: 1px solid black;
 }
 
-.queues-item .title {
+.tile .title {
   font-weight: bold;
+}
+
+.tile .inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.tile .content {
+  flex: 1;
+}
+
+.tile .menubar {
+  height:  32px;
 }
