@@ -1,36 +1,48 @@
 
-html, body {
+html, body, #wrapper {
+  box-sizing: border-box;
   padding: 0;
   margin: 0;
   width: 100%;
+  height: 100%;
+  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
 }
 
-body {
-  overflow-y: scroll;
+#wrapper {
+  display: flex;
+  flex-direction: column;
 }
 
 .content-title {
-  text-align: center;
-  position: fixed;
+  text-align: left;
   width: 100%;
-  height: 32px;
-  background: white;
+  padding:  12px 0;
+  background: black;
+  color: white;
+}
+
+.content-title a {
+  color: white;
+  text-decoration: none;
 }
 
 .content-container {
-  padding-top: 32px;
-  text-align: center;
+  text-align: left;
+  overflow-y: scroll;
+  flex: 1;
 }
 
 .tile {
-  display: inline-block;
+  display: block;
   overflow: hidden;
-  height: 300px;
-  width:  200px;
+  width:  100%;
+  min-height:  150px;
   cursor: pointer;
-  padding: 10px;
-  margin:  10px;
-  border: 1px solid black;
+  border-bottom: 1px solid darkgray;
+}
+
+.tile:nth-child(even) {
+  background: lightgray;
 }
 
 .tile .title {

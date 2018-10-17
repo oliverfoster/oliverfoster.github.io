@@ -41,6 +41,19 @@ var each = function(arr, cb, elsecb) {
   return arr.map(cb).join("");
 };
 
+var or = function(args) {
+  for (var i = 0, l = arguments.length; i < l; i++) {
+    switch (arguments[i]) {
+      case undefined:
+      case null:
+        continue;
+      default:
+        return arguments[i];
+    }
+  }
+  return "";
+};
+
 var seat = function(obj) {
   var children = templates.children;
   var existing = children[obj.id];
