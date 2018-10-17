@@ -89,7 +89,7 @@ var Upvote = View.extend({
     <img class="logo logo-light" alt="Adapt Learning" src="https://www.adaptlearning.org/wp-content/uploads/2016/01/nav_logo_white-alt-2-1.png">
     <ul>
       <li>Upvoter:</li>
-      <li>Votes</li>
+      <li>Polls</li>
     </ul>
   </div>
   <div class="content-container">
@@ -104,7 +104,7 @@ var Upvote = View.extend({
     <img class="logo logo-light" alt="Adapt Learning" src="https://www.adaptlearning.org/wp-content/uploads/2016/01/nav_logo_white-alt-2-1.png">
     <ul>
       <li>Upvoter:</li>
-      <li><a href="#queues">Votes</a></li>
+      <li><a href="#queues">Polls</a></li>
       <li>Issues</li>
     </ul>
   </div>
@@ -290,8 +290,8 @@ var LoginView = View.extend({
 
   onClick: function() {
     upvote.octo = new Octokat({
-      username: this.model.username,
-      password: this.model.password,
+      username: elements("#username", this.el).value(),
+      password: elements("#password", this.el).value(),
       acceptHeader: 'application/vnd.github.mockingbird-preview, application/vnd.github.squirrel-girl-preview+json'
     });
     upvote.octo.zen.read(this.logout.bind(this));
