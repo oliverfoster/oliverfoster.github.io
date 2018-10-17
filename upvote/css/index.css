@@ -150,15 +150,42 @@ html, body, #wrapper {
   flex: 1;
 }
 
+.queues .tile {
+  cursor: pointer;
+}
+
 .tile {
   display: block;
   overflow: hidden;
   max-width: 980px;
-  min-height: 200px;
-  cursor: pointer;
+  min-height: 150px;
   border-bottom: 1px solid darkgray;
   margin: auto;
   padding: 20px 0 0 0;
+}
+
+.tile .header {
+  display: flex;
+}
+
+.tile .avatar img {
+  height: 28px;
+  width: 28px;
+  padding-right: 10px;
+  vertical-align: bottom;
+}
+
+.tile .up img {
+  vertical-align: text-bottom;
+}
+
+.tile .down img {
+  vertical-align: bottom;
+}
+
+.tile .up img,
+.tile .down img {
+  width: 24px;
 }
 
 .tile .title {
@@ -174,6 +201,34 @@ html, body, #wrapper {
   font-weight:  400;
   line-height: 1.4;
   margin-top: 0;
+  margin-bottom: 5px;
+}
+
+.tile .subtitle .state {
+  display: inline-block;
+  padding: 4px 8px;
+  font-weight: 600;
+  line-height: 20px;
+  color: #fff;
+  text-align: center;
+  background-color: #6a737d;
+  border-radius: 3px;
+  font-size: 14px;
+}
+
+.tile .subtitle .state svg {
+  fill: white;
+  vertical-align: sub;
+}
+
+.tile .subtitle .state.open {
+  background-color: #2cbe4e;
+  color: white;
+}
+
+.tile .subtitle .state.closed {
+  background-color: #cb2431;
+  color: white;
 }
 
 .tile .issue-number {
@@ -186,6 +241,7 @@ html, body, #wrapper {
   display: flex;
   flex-direction: row;
   height: 100%;
+  padding: 0 10px;
 }
 
 .tile .content {

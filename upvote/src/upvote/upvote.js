@@ -143,7 +143,10 @@ var QueuesModel = Model.extend({
         upvote.issues[issue.number].number = issue.number;
         upvote.issues[issue.number].title = issue.title;
         upvote.issues[issue.number].body = issue.body;
+        upvote.issues[issue.number].state = issue.state;
         upvote.issues[issue.number].htmlUrl = issue.htmlUrl;
+        upvote.issues[issue.number].user = issue.user;
+        upvote.issues[issue.number].createdAt = issue.createdAt;
         upvote.issues[issue.number].referenceComment = upvote.issues[issue.number].referenceComment || {
           upVotes: 0,
           downVotes: 0,
@@ -185,7 +188,10 @@ var QueuesModel = Model.extend({
         upvote.issues[issue.number].number = issue.number;
         upvote.issues[issue.number].title = issue.title;
         upvote.issues[issue.number].body = issue.body;
+        upvote.issues[issue.number].state = issue.state;
         upvote.issues[issue.number].htmlUrl = issue.htmlUrl;
+        upvote.issues[issue.number].user = issue.user;
+        upvote.issues[issue.number].createdAt = issue.createdAt
         upvote.issues[issue.number].referenceComment = upvote.issues[issue.number].referenceComment || {
           upVotes: 0,
           downVotes: 0,
@@ -391,8 +397,22 @@ var UpvoteQueuesItemView = View.extend({
     <div class="menubar">
     </div>
     <div class="content">
-      <div class="title"><h1>${this.model.title}<a href="${this.model.htmlUrl}"><span class="issue-number">#${this.model.number}</span></h1></a></div>
+      <div class="header">
+        <div class="text">
+          <div class="title"><h1>${this.model.title}<a href="${this.model.htmlUrl}"> <span class="issue-number">#${this.model.number}</span></h1></a></div>
+          <div class="subtitle">
+            <span class="state ${this.model.state}">${this.model.state === "closed" ? svg.closed + " Closed" : svg.open + " Open" }</span>
+            <span class="avatar">
+              <img src="${this.model.user.avatarUrl}" />
+            </span>
+            <span class="readline">${this.model.user.login} created this poll.</span>
+          </div>
+        </div>
+      </div>
       <div class="body markdown">${converter.makeHtml(this.model.body)}</div>
+      <div class="footer">
+        
+      </div>
     </div>
   </div>
 </div>
@@ -439,11 +459,24 @@ var UpvoteQueueItemView = View.extend({
       <button class="exclude" onclick="this.view.onExclude(event);">Exclude</button>
     </div>
     <div class="content">
-      <div class="title"><h1>${this.model.title} <a href="${this.model.referenceComment.htmlUrl}" target="_blank"><span class="issue-number">#${this.model.number}</span></a></h1></div>
+      <div class="header">
+        <div class="text">
+          <div class="title"><h1>${this.model.title} <a href="${this.model.referenceComment.htmlUrl}" target="_blank"><span class="issue-number">#${this.model.number}</span></a></h1></div>
+          <div class="subtitle">
+            <span class="state ${this.model.state}">${this.model.state === "closed" ? svg.closed + " Closed" : svg.open + " Open" }</span>
+            <span class="avatar">
+              <img src="${this.model.user.avatarUrl}" />
+            </span>
+            <span class="readline">${this.model.user.login} created this issue. </span>
+            <span class="up"> <img src="${img['+1']}"/> ${this.model.referenceComment.upVotes}</span>  /  
+            <span class="down"><img src="${img['-1']}"/> ${this.model.referenceComment.downVotes}</span>
+          </div>
+        </div>
+      </div>
       <div class="body markdown">${converter.makeHtml(this.model.body)}</div>
-      <div class="votes">
+      <div class="footer">
+        <!--
         <div class="up">
-          <div class="text">up votes: ${this.model.referenceComment.upVotes}</div>
           <div class="voters">
             ${each(this.model.referenceComment.upVotedUsers, (name)=>{
               return '<div class="username">'+name+'</div>';
@@ -451,13 +484,14 @@ var UpvoteQueueItemView = View.extend({
           </div>
         </div>
         <div class="down">
-          <div class="text">down votes: ${this.model.referenceComment.downVotes}</div>
+          <div class="text"><img src="${img['-1']}"/> ${this.model.referenceComment.downVotes}</div>
           <div class="voters">
             ${each(this.model.referenceComment.downVotedUsers, (name)=>{
               return '<div class="username">'+name+'</div>';
             })}
           </div>
         </div>
+        --!>
       </div>
     </div>
   </div>
