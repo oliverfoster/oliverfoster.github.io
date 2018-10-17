@@ -8,7 +8,7 @@ var Upvote = View.extend({
   octo: null,
   user: "oliverfoster",
   repo: "adapt-process-recommendations",
-  tag: "upvote",
+  tag: "poll",
   // user: "adaptlearning",
   // repo: "adapt_framework",
   // tag: "enhancement",
@@ -164,10 +164,20 @@ var QueuesModel = Model.extend({
 
   fetchQueue: function() {
     this.queueItems = null;
+    var rex = new RegExp(`https\:\/\/github\.com\/${upvote.user}\/`);
     upvote.octo.repos(upvote.user, upvote.repo).issues(this.queue.number).timeline.fetch().then(function(obj) {
       var issues = obj.items.filter(function(item) {
-        return item.event === "cross-referenced" &&
-          item.source.type === "issue";
+        var isCrossReferencedIssue = (item.event === "cross-referenced" &&
+          item.source.type === "issue");
+        if (!isCrossReferencedIssue) return;
+        var issue = item.source.issue;
+        var isNativeToRepo = Boolean(issue.htmlUrl.match(rex));
+        if (!isNativeToRepo) return;
+        var hideFromPoll = issue.labels.find(function(label) {
+          return label.name === "poll-hide";
+        });
+        if (hideFromPoll) return;
+        return true;
       });
       this.queueItems = issues.map(function(item) {
         var issue = item.source.issue;
@@ -381,7 +391,7 @@ var UpvoteQueuesItemView = View.extend({
     <div class="menubar">
     </div>
     <div class="content">
-      <div class="title"><h1><a href="${this.model.htmlUrl}">${this.model.title}</a> <span class="issue-number">#${this.model.number}</span></h1></div>
+      <div class="title"><h1>${this.model.title}<a href="${this.model.htmlUrl}"><span class="issue-number">#${this.model.number}</span></h1></a></div>
       <div class="body markdown">${converter.makeHtml(this.model.body)}</div>
     </div>
   </div>
@@ -429,7 +439,7 @@ var UpvoteQueueItemView = View.extend({
       <button class="exclude" onclick="this.view.onExclude(event);">Exclude</button>
     </div>
     <div class="content">
-      <div class="title"><h1><a href="${this.model.referenceComment.htmlUrl}" target="_blank">${this.model.title} <span class="issue-number">#${this.model.number}</span></a></h1></div>
+      <div class="title"><h1>${this.model.title} <a href="${this.model.referenceComment.htmlUrl}" target="_blank"><span class="issue-number">#${this.model.number}</span></a></h1></div>
       <div class="body markdown">${converter.makeHtml(this.model.body)}</div>
       <div class="votes">
         <div class="up">
