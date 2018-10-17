@@ -31,7 +31,7 @@ var Router = Class.extend({
   cookie$get: function() {
     var pairs = {};
     var str = document.cookie;
-    var rawPairs = str.split("&");
+    var rawPairs = str.split(";");
     for (var i = 0, l = rawPairs.length; i < l; i++) {
       var parts = rawPairs[i].split("=");
       pairs[parts[0]] = parts[1];

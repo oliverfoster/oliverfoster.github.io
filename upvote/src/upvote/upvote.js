@@ -294,6 +294,10 @@ var LoginView = View.extend({
       password: this.model.password,
       acceptHeader: 'application/vnd.github.mockingbird-preview, application/vnd.github.squirrel-girl-preview+json'
     });
+    var cb = function (err, val) { 
+      console.log(val) 
+    };
+    upvote.octo.zen.read(cb)
     upvote.router.push("#queues");
   },
 
@@ -303,6 +307,13 @@ var LoginView = View.extend({
         token: upvote.router.cookie.oauth,
         acceptHeader: 'application/vnd.github.mockingbird-preview, application/vnd.github.squirrel-girl-preview+json'
       });
+      var cb = function (err, val) { 
+        if (err) {
+          document.cookie = `oauth=;path=/;max-age=31536000;samesite`;
+          upvote.router.replace("#login");
+        }
+      };
+      upvote.octo.zen.read(cb)
       upvote.router.push("#queues");
     }
   },
