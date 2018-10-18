@@ -191,17 +191,7 @@ var QueuesModel = Model.extend({
       var issues = events.map(function(event) { return event.source.issue; });
       this.queueItems =  new IssueCollection(issues);
       this.queueItems.update(function() {
-        this.queueItems.sort(function(a,b) {
-          var aRef = a.referenceComment;
-          var bRef = b.referenceComment;
-          if (!aRef) return -1;
-          if (!bRef) return 1;
-          var positiveDifference = bRef.positiveVotes - aRef.positiveVotes;
-          if (!positiveDifference) {
-            return bRef.totalVotes - aRef.totalVotes;
-          }
-          return positiveDifference;
-        });
+        this.queueItems.order();
       }.bind(this));
     }.bind(this));
   }
@@ -279,6 +269,23 @@ var IssueCollection = Collection.extend({
         callback && callback();
       }.bind(this));
     }.bind(this));
+  },
+
+  order: function() {
+    this.sort(function(a,b) {
+      var aRef = a.referenceComment;
+      var bRef = b.referenceComment;
+      if (!aRef) return -1;
+      if (!bRef) return 1;
+      var positiveDifference = (bRef.reactions['+1'] - bRef.reactions['1']) -
+        (aRef.reactions['+1'] - aRef.reactions['1']);
+      if (!positiveDifference) {
+        var totalDifference = (bRef.reactions['+1'] + bRef.reactions['1']) -
+          (aRef.reactions['+1'] + aRef.reactions['1']);
+        return totalDifference;
+      }
+      return positiveDifference;
+    });
   }
 
 });
@@ -549,6 +556,7 @@ var UpvoteQueueItemView = View.extend({
     var referenceComment = this.model.referenceComment;
     referenceComment &&
     referenceComment.toggleReaction("+1", !referenceComment.hasVoted("+1"), function() {
+      upvote.model.queueItems.order();
       this.render();
     }.bind(this));
   },
@@ -557,6 +565,7 @@ var UpvoteQueueItemView = View.extend({
     var referenceComment = this.model.referenceComment;
     referenceComment &&
     referenceComment.toggleReaction("-1", !referenceComment.hasVoted("-1"), function() {
+      upvote.model.queueItems.order();
       this.render();
     }.bind(this));
   },
