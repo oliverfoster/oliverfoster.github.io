@@ -1,8 +1,10 @@
 var ProxyCreate = function(subject, attributes, options) {
   options = options || {};
-  options.model = options.model || function(value) {
-    if (value instanceof Array) return new Collection(value);
-    return new Model(value);
+  options.child = options.child || function(value) {
+    if (value instanceof Collection) return new value.constructor(value, options);
+    if (value instanceof Model) return new value.constructor(value, options);
+    if (value instanceof Array) return new Collection(value, options);
+    return new Model(value, options);
   };
   subject.__model__ = subject;
   subject.attributes = attributes;
@@ -11,7 +13,6 @@ var ProxyCreate = function(subject, attributes, options) {
   subject.__proxy__ = new Proxy(subject, {
     get: function(target, key) {
       if (!this.attributes.hasOwnProperty(key)) return this[key];
-      //if (this.attributes[key] === undefined) return this[key];
       var value = this.attributes[key];
       var typeOfValue = typeof value;
       switch (typeOfValue) {
@@ -21,7 +22,7 @@ var ProxyCreate = function(subject, attributes, options) {
       var isAnObject = (typeOfValue === "object" && value !== null);
       if (!isAnObject) return this.attributes[key];
       if (this.__children__[key]) return this.__children__[key];
-      this.__children__[key] = options.model(value);
+      this.__children__[key] = options.child.call(this, value);
       this.listenTo(this.__children__[key].__model__, "propagate", function(subkey, subvalue, oldsubvalue) {
         var newkey = key + "." + subkey;
         var shouldPreventPropagation = (options && options.preventPropagation);

@@ -31,6 +31,7 @@ var extendNotEnumerable = function(subject, fromItemsArgs) {
 };
 
 var extend = function(subject, fromItemsArgs) {
+  subject = subject || {};
   for (var i = 1, l = arguments.length; i < l; i++) {
     var arg = arguments[i];
     for (var k in arg) {

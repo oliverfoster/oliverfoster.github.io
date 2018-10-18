@@ -288,6 +288,7 @@ var REPO_FIELDS = {
     'labels': false,
     'timeline': false
   },
+  'reactions': false,
   'git': {
     'refs': {
       'heads': false,
@@ -1683,10 +1684,10 @@ module.exports = new (function () {
     value: function requestMiddlewareAsync(input) {
       var path = input.path;
 
-      if (!URL_VALIDATOR.test(path)) {
-        var err = 'Octokat BUG: Invalid Path. If this is actually a valid path then please update the URL_VALIDATOR. path=' + path;
-        console.warn(err);
-      }
+      // if (!URL_VALIDATOR.test(path)) {
+      //   var err = 'Octokat BUG: Invalid Path. If this is actually a valid path then please update the URL_VALIDATOR. path=' + path;
+      //   console.warn(err);
+      // }
       return Promise.resolve(input);
     }
   }]);

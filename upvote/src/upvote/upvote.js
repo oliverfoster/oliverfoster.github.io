@@ -6,12 +6,15 @@ var Upvote = View.extend({
 
   router: null,
   octo: null,
-  user: "oliverfoster",
-  repo: "adapt-process-recommendations",
-  tag: "poll",
-  // user: "adaptlearning",
-  // repo: "adapt_framework",
-  // tag: "enhancement",
+  repo: null,
+  user: null,
+  acceptHeader: "application/vnd.github.mockingbird-preview, application/vnd.github.squirrel-girl-preview+json, application/vnd.github.echo-preview+json",
+  user_name: "oliverfoster",
+  repo_name: "adapt-process-recommendations",
+  tag_name: "poll",
+  // user_name: "adaptlearning",
+  // repo_name: "adapt_framework",
+  // tag_name: "enhancement",
   client_id: "ff5cf9bb34c83b06f2fb",
 
   initialize: function() {
@@ -137,27 +140,8 @@ var QueuesModel = Model.extend({
   fetchQueues: function() {
     upvote.issues = upvote.issues || {};
     this.queues = null;
-    upvote.octo.repos(upvote.user, upvote.repo).issues.fetch({state:"open", labels: upvote.tag}).then(function(obj) {
-      this.queues = obj.items.map(function(issue) {
-        upvote.issues[issue.number] = upvote.issues[issue.number] || {};
-        upvote.issues[issue.number].number = issue.number;
-        upvote.issues[issue.number].title = issue.title;
-        upvote.issues[issue.number].body = issue.body;
-        upvote.issues[issue.number].state = issue.state;
-        upvote.issues[issue.number].htmlUrl = issue.htmlUrl;
-        upvote.issues[issue.number].user = issue.user;
-        upvote.issues[issue.number].createdAt = issue.createdAt;
-        upvote.issues[issue.number].referenceComment = upvote.issues[issue.number].referenceComment || {
-          upVotes: 0,
-          downVotes: 0,
-          positiveVotes: 0,
-          totalVotes: 0,
-          upVotedUsers: {},
-          downVotedUsers: {},
-          htmlUrl: ""
-        };
-        return upvote.issues[issue.number];
-      }.bind(this));
+    upvote.repo.issues.fetch({state:"open", labels: upvote.tag_name}).then(function(obj) {
+      this.queues = obj.items.map(this.fetchCachedIssue);
       if (upvote.navigateTo) {
         upvote.router.replace(upvote.navigateTo);
         upvote.navigateTo = null;
@@ -165,11 +149,23 @@ var QueuesModel = Model.extend({
     }.bind(this));
   },
 
+  fetchCachedIssue: function(issue) {
+    upvote.issues[issue.number] = upvote.issues[issue.number] || {};
+    upvote.issues[issue.number].number = issue.number;
+    upvote.issues[issue.number].title = issue.title;
+    upvote.issues[issue.number].body = issue.body;
+    upvote.issues[issue.number].state = issue.state;
+    upvote.issues[issue.number].htmlUrl = issue.htmlUrl;
+    upvote.issues[issue.number].user = issue.user;
+    upvote.issues[issue.number].createdAt = issue.createdAt
+    return upvote.issues[issue.number];
+  },
+
   fetchQueue: function() {
     this.queueItems = null;
-    var rex = new RegExp(`https\:\/\/github\.com\/${upvote.user}\/`);
-    upvote.octo.repos(upvote.user, upvote.repo).issues(this.queue.number).timeline.fetch().then(function(obj) {
-      var issues = obj.items.filter(function(item) {
+    var rex = new RegExp(`https\:\/\/github\.com\/${upvote.user_name}\/`);
+    upvote.repo.issues(this.queue.number).timeline.fetch().then(function(obj) {
+      var events = obj.items.filter(function(item) {
         var isCrossReferencedIssue = (item.event === "cross-referenced" &&
           item.source.type === "issue");
         if (!isCrossReferencedIssue) return;
@@ -182,27 +178,8 @@ var QueuesModel = Model.extend({
         if (hideFromPoll) return;
         return true;
       });
-      this.queueItems = issues.map(function(item) {
-        var issue = item.source.issue;
-        upvote.issues[issue.number] = upvote.issues[issue.number] || {};
-        upvote.issues[issue.number].number = issue.number;
-        upvote.issues[issue.number].title = issue.title;
-        upvote.issues[issue.number].body = issue.body;
-        upvote.issues[issue.number].state = issue.state;
-        upvote.issues[issue.number].htmlUrl = issue.htmlUrl;
-        upvote.issues[issue.number].user = issue.user;
-        upvote.issues[issue.number].createdAt = issue.createdAt
-        upvote.issues[issue.number].referenceComment = upvote.issues[issue.number].referenceComment || {
-          upVotes: 0,
-          downVotes: 0,
-          positiveVotes: 0,
-          totalVotes: 0,
-          upVotedUsers: [],
-          downVotedUsers: [],
-          htmlUrl: ""
-        };
-        return upvote.issues[issue.number];
-      }.bind(this));
+      var issues = events.map(function(event) { return event.source.issue; });
+      this.queueItems =  issues.map(this.fetchCachedIssue);
       this.fetchQueueItems();
     }.bind(this));
   },
@@ -233,32 +210,41 @@ var QueuesModel = Model.extend({
   },
 
   calculateReferenceComment: function(parentIssueNumber, issue) {
-    issue.referenceComment.upVotes = 0;
-    issue.referenceComment.downVotes = 0;
-    issue.referenceComment.positiveVotes = 0;
-    issue.referenceComment.totalVotes = 0;
-    issue.referenceComment.upVotedUsers = [];
-    issue.referenceComment.downVotedUsers = [];
     var referenceComment = issue &&
       issue.referenceComments &&
       issue.referenceComments[parentIssueNumber] &&
       issue.referenceComments[parentIssueNumber][issue.referenceComments[parentIssueNumber].length-1];
-    referenceComment && referenceComment.reactions.forEach(function(reaction) {
-      switch (reaction.content) {
-        case "+1":
-          issue.referenceComment.upVotes++;
-          if (!issue.referenceComment.upVotedUsers.includes(reaction.user.login)) {
-            issue.referenceComment.upVotedUsers.push(reaction.user.login);
-          }
-          break;
-        case "-1":
-          issue.referenceComment.downVotes++;
-          if (!issue.referenceComment.upVotedUsers.includes(reaction.user.login)) {
-            issue.referenceComment.downVotedUsers.push(reaction.user.login);
-          }
-          break;
-      }
+    issue.referenceComment = extend(referenceComment, {
+      upVotes: 0,
+      downVotes: 0,
+      positiveVotes: 0,
+      totalVotes: 0,
+      isIncluded: false,
+      upVotedUsers: [],
+      downVotedUsers: []
     });
+    issue.referenceComment &&
+      issue.referenceComment.reactions &&
+      issue.referenceComment.reactions.forEach(function(reaction) {
+        switch (reaction.content) {
+          case "+1":
+            issue.referenceComment.upVotes++;
+            if (!issue.referenceComment.upVotedUsers.includes(reaction.user.login)) {
+              issue.referenceComment.upVotedUsers.push(reaction.user.login);
+            }
+            break;
+          case "-1":
+            issue.referenceComment.downVotes++;
+            if (!issue.referenceComment.upVotedUsers.includes(reaction.user.login)) {
+              issue.referenceComment.downVotedUsers.push(reaction.user.login);
+            }
+            break;
+          case "heart":
+            if (reaction.user.login !== upvote.user.login) return;
+            issue.referenceComment.isIncluded = true;
+            break;
+        }
+      });
     issue.referenceComment.positiveVotes = issue.referenceComment.upVotes - issue.referenceComment.downVotes;
     issue.referenceComment.totalVotes = issue.referenceComment.upVotes + issue.referenceComment.downVotes;
     issue.referenceComment.htmlUrl = referenceComment && referenceComment.htmlUrl || "";
@@ -267,7 +253,7 @@ var QueuesModel = Model.extend({
   fetchReferencedComments: function(parentIssueNumber, issueNumber, callback) {
     var referenceIssueNumber = upvote.model.queue.number;
     var rex = new RegExp("(\\#"+referenceIssueNumber+"(\\W|$))|"+upvote.model.queue.htmlUrl);
-    upvote.octo.repos(upvote.user, upvote.repo).issues(issueNumber).comments.fetch().then(function(obj) {
+    upvote.repo.issues(issueNumber).comments.fetch().then(function(obj) {
       upvote.issues[issueNumber].comments = obj.items;
       var count = 0, done = 0;
       var referenceComments = obj.items.filter(function(comment) {
@@ -286,12 +272,12 @@ var QueuesModel = Model.extend({
         return hasReference;
       }.bind(this));
       upvote.issues[issueNumber].referenceComments = upvote.issues[issueNumber].referenceComments || {};
-      upvote.issues[issueNumber].referenceComments[parentIssueNumber] = referenceComments;
+      upvote.issues[issueNumber].referenceComments[parentIssueNumber] = new CommentCollection(referenceComments, {issueNumber: issueNumber});
     }.bind(this));
   },
 
   fetchReferencedCommentReactions: function(issueNumber, commentId, callback) {
-    upvote.octo.repos(upvote.user, upvote.repo).issues.comments(commentId).reactions.fetch().then(function(obj) {
+    upvote.repo.issues.comments(commentId).reactions.fetch().then(function(obj) {
       var comment = upvote.issues[issueNumber].comments.find(function(comment) {
         return comment.id === commentId;
       });
@@ -302,15 +288,61 @@ var QueuesModel = Model.extend({
 
 });
 
+var CommentModel = Model.extend({
+
+  constructor: function CommentModel() {
+    return Model.apply(this, arguments);
+  },
+
+  toggleReaction: function(name, value) {
+    if (value) {
+      upvote.repo.issues.comments(this.id).reactions.create({
+        content: "heart"
+      });
+      this.isIncluded = true;
+    } else {
+      this.reactions.forEach(function(reaction) {
+        switch (reaction.content) {
+          case "heart":
+            if (reaction.user.login !== upvote.user.login) return;
+            upvote.repo.reactions(reaction.id).remove();
+            this.isIncluded = false;
+            break;
+        }
+      }.bind(this));
+    }
+  }
+
+});
+
+var CommentCollection = Collection.extend({
+
+  constructor: function CommentCollection(data, options) {
+    this.issueNumber = options.issueNumber || data.issueNumber;
+    return Collection.call(this, data, {
+      child: function(value) {
+        if (value instanceof Array) return new Collection(value, options);
+        value.issueNumber = this.issueNumber;
+        return new CommentModel(value, options);
+      }
+    });
+  }
+
+});
+
 var LoginView = View.extend({
 
   onClick: function() {
     upvote.octo = new Octokat({
       username: elements("#username", this.el).value(),
       password: elements("#password", this.el).value(),
-      acceptHeader: 'application/vnd.github.mockingbird-preview, application/vnd.github.squirrel-girl-preview+json'
+      acceptHeader: upvote.acceptHeader
     });
     upvote.octo.zen.read(this.logout.bind(this));
+    upvote.repo = upvote.octo.repos(upvote.user_name, upvote.repo_name);
+    upvote.octo.user.fetch().then(function(user) {
+      upvote.user = user;
+    });
     upvote.router.push("#queues");
   },
 
@@ -325,9 +357,13 @@ var LoginView = View.extend({
     if (upvote.router.cookie.oauth) {
       upvote.octo = new Octokat({
         token: upvote.router.cookie.oauth,
-        acceptHeader: 'application/vnd.github.mockingbird-preview, application/vnd.github.squirrel-girl-preview+json'
+        acceptHeader: upvote.acceptHeader
       });
       upvote.octo.zen.read(this.logout.bind(this));
+      upvote.repo = upvote.octo.repos(upvote.user_name, upvote.repo_name);
+      upvote.octo.user.fetch().then(function(user) {
+        upvote.user = user;
+      });
       upvote.router.push("#queues");
     }
   },
@@ -348,7 +384,7 @@ var LoginView = View.extend({
       <button class="btn" onclick="this.view.onClick();">Login</button>
       <div class="sso">
         <div class="inner">
-        Or try single sign-on through <a href="https://github.com/login/oauth/authorize?client_id=${upvote.client_id}&scope=public_repo">GitHub</a>?
+        Or try single sign-on through <a href="https://github.com/login/oauth/authorize?client_id=${upvote.client_id}&scope=public_repo,write:discussion">GitHub</a>?
         </div>
       </div>
     </div>
@@ -411,7 +447,7 @@ var UpvoteQueuesItemView = View.extend({
       </div>
       <div class="body markdown">${converter.makeHtml(this.model.body)}</div>
       <div class="footer">
-        
+
       </div>
     </div>
   </div>
@@ -448,15 +484,38 @@ var UpvoteQueueView = View.extend({
 
 var UpvoteQueueItemView = View.extend({
 
+  onUpVote: function() {
+
+  },
+
+  onDownVote: function() {
+
+  },
+
+  onInclude: function() {
+    var issue = this.model;
+    var parentIssueNumber = upvote.model.queue.number;
+    var referenceComment = issue &&
+      issue.referenceComments &&
+      issue.referenceComments[parentIssueNumber] &&
+      issue.referenceComments[parentIssueNumber][issue.referenceComments[parentIssueNumber].length-1];
+    referenceComment.toggleReaction("heart", !this.model.referenceComment.isIncluded, function() {
+      upvote.fetchReferencedCommentReactions(issue.number, issue.referenceComment.id, function() {
+        this.render();
+      }.bind(this));
+    }.bind(this));
+
+  },
+
   template: function() {
     return `
 <div view-container="true" id="${this.id}" class="queue-item tile">
   <div class="inner">
     <div class="menubar">
-      <button class="up" onclick="this.view.onUp(event);">Up</button>
-      <button class="down" onclick="this.view.onDown(event);">Down</button>
-      <button class="include" onclick="this.view.onInclude(event);">Include</button>
-      <button class="exclude" onclick="this.view.onExclude(event);">Exclude</button>
+      <div class="padding"></div>
+      <button class="up menu-btn" onclick="this.view.onUpVote(event);"> ${emoji['+1']} ${this.model.referenceComment.upVotes}</button>
+      <button class="down menu-btn" onclick="this.view.onDownVote(event);"> ${emoji['-1']} ${this.model.referenceComment.downVotes}</button>
+      <button class="include menu-btn emoji" onclick="this.view.onInclude(event);"> ${this.model.referenceComment.isIncluded?emoji['black_circle']:emoji['white_circle']}${this.model.referenceComment.isIncluded?" Publish":" Don't publish"}</button>
     </div>
     <div class="content">
       <div class="header">
@@ -468,8 +527,6 @@ var UpvoteQueueItemView = View.extend({
               <img src="${this.model.user.avatarUrl}" />
             </span>
             <span class="readline">${this.model.user.login} created this issue. </span>
-            <span class="up"> <img src="${img['+1']}"/> ${this.model.referenceComment.upVotes}</span>  /  
-            <span class="down"><img src="${img['-1']}"/> ${this.model.referenceComment.downVotes}</span>
           </div>
         </div>
       </div>
@@ -484,7 +541,6 @@ var UpvoteQueueItemView = View.extend({
           </div>
         </div>
         <div class="down">
-          <div class="text"><img src="${img['-1']}"/> ${this.model.referenceComment.downVotes}</div>
           <div class="voters">
             ${each(this.model.referenceComment.downVotedUsers, (name)=>{
               return '<div class="username">'+name+'</div>';
