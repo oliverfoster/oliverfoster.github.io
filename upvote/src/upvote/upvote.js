@@ -179,7 +179,7 @@ var QueuesModel = Model.extend({
         return true;
       });
       var issues = events.map(function(event) { return event.source.issue; });
-      this.queueItems =  issues.map(this.fetchCachedIssue);
+      this.queueItems =  new IssueCollection(issues.map(this.fetchCachedIssue));
       this.fetchQueueItems();
     }.bind(this));
   },
@@ -214,6 +214,9 @@ var QueuesModel = Model.extend({
       issue.referenceComments &&
       issue.referenceComments[parentIssueNumber] &&
       issue.referenceComments[parentIssueNumber][issue.referenceComments[parentIssueNumber].length-1];
+    if (!referenceComment) {
+      referenceComment = new CommentModel({});
+    }
     issue.referenceComment = extend(referenceComment, {
       upVotes: 0,
       downVotes: 0,
@@ -222,6 +225,9 @@ var QueuesModel = Model.extend({
       isIncluded: false,
       upVotedUsers: [],
       downVotedUsers: []
+    });
+    defaults(issue.referenceComment, {
+      body: ""
     });
     issue.referenceComment &&
       issue.referenceComment.reactions &&
@@ -239,10 +245,6 @@ var QueuesModel = Model.extend({
               issue.referenceComment.downVotedUsers.push(reaction.user.login);
             }
             break;
-          case "heart":
-            if (reaction.user.login !== upvote.user.login) return;
-            issue.referenceComment.isIncluded = true;
-            break;
         }
       });
     issue.referenceComment.positiveVotes = issue.referenceComment.upVotes - issue.referenceComment.downVotes;
@@ -254,7 +256,7 @@ var QueuesModel = Model.extend({
     var referenceIssueNumber = upvote.model.queue.number;
     var rex = new RegExp("(\\#"+referenceIssueNumber+"(\\W|$))|"+upvote.model.queue.htmlUrl);
     upvote.repo.issues(issueNumber).comments.fetch().then(function(obj) {
-      upvote.issues[issueNumber].comments = obj.items;
+      upvote.issues[issueNumber].comments = new CommentCollection(obj.items, { issueNumber: issueNumber });
       var count = 0, done = 0;
       var referenceComments = obj.items.filter(function(comment) {
         var hasReference = (null !== comment.body.match(rex));
@@ -288,6 +290,28 @@ var QueuesModel = Model.extend({
 
 });
 
+var IssueModel = Model.extend({
+
+  constructor: function IssueModel() {
+    return Model.apply(this, arguments);
+  }
+
+});
+
+var IssueCollection = Collection.extend({
+
+  constructor: function CommentCollection(data, options) {
+    return Collection.call(this, data, {
+      child: function(value) {
+        if (value instanceof Array) return new Collection(value, options);
+        return new IssueModel(value, options);
+      }
+    });
+  }
+
+});
+
+
 var CommentModel = Model.extend({
 
   constructor: function CommentModel() {
@@ -297,20 +321,62 @@ var CommentModel = Model.extend({
   toggleReaction: function(name, value) {
     if (value) {
       upvote.repo.issues.comments(this.id).reactions.create({
-        content: "heart"
+        content: name
       });
-      this.isIncluded = true;
     } else {
       this.reactions.forEach(function(reaction) {
-        switch (reaction.content) {
-          case "heart":
-            if (reaction.user.login !== upvote.user.login) return;
-            upvote.repo.reactions(reaction.id).remove();
-            this.isIncluded = false;
-            break;
-        }
+        if (reaction.content !== name) return;
+        if (reaction.user.login !== upvote.user.login) return;
+        upvote.octo.reactions(reaction.id).remove();
+        break;
       }.bind(this));
     }
+  },
+
+  toggleFlag: function(name, value) {
+    var rex = /\n\[\]\(file\:\/\/upvoter\.flag\?[^)]*\)/g;
+    var matches = this.body.match(rex);
+    var flags = {};
+    if (matches) {
+      this.body = this.body.replace(rex, "");
+      var match = matches[0];
+      var rawFlags = match.replace(/\n\[\]\(file\:\/\/upvoter\.flag\?/g, "").slice(0,-1);
+      var rawPairs = rawFlags.split("&");
+      rawPairs.forEach(function(rawPair) {
+        var parts = rawPair.split("=");
+        if (!parts[0]) return;
+        flags[parts[0]] = true;
+      });
+    }
+    if (!value) {
+      delete flags[name];
+    } else {
+      flags[name] = true;
+    }
+    var rawFlags = [];
+    for (var k in flags) {
+      rawFlags.push(k + "=" + "1");
+    }
+    var pattern = "\n[](file://upvoter.flag?"+rawFlags.join("&")+")";
+    this.body += pattern;
+    upvote.repo.issues.comments(this.id).update({ body: this.body });
+    this.updated("flags", flags, {});
+  },
+
+  flags$get: function() {
+    var rex = /\[\]\(file\:\/\/upvoter\.flag\?[^)]*\)/g;
+    var matches = this.attributes.body.match(rex);
+    var flags = {};
+    if (matches) {
+      var match = matches[0];
+      var rawFlags = match.replace(/\[\]\(file\:\/\/upvoter\.flag\?/g, "").slice(0,-1);
+      var rawPairs = rawFlags.split("&");
+      rawPairs.forEach(function(rawPair) {
+        var parts = rawPair.split("=");
+        flags[parts[0]] = parts[1];
+      });
+    }
+    return flags;
   }
 
 });
@@ -499,7 +565,7 @@ var UpvoteQueueItemView = View.extend({
       issue.referenceComments &&
       issue.referenceComments[parentIssueNumber] &&
       issue.referenceComments[parentIssueNumber][issue.referenceComments[parentIssueNumber].length-1];
-    referenceComment.toggleReaction("heart", !this.model.referenceComment.isIncluded, function() {
+    referenceComment.toggleFlag("publish", !this.model.referenceComment.flags.publish, function() {
       upvote.fetchReferencedCommentReactions(issue.number, issue.referenceComment.id, function() {
         this.render();
       }.bind(this));
@@ -515,7 +581,7 @@ var UpvoteQueueItemView = View.extend({
       <div class="padding"></div>
       <button class="up menu-btn" onclick="this.view.onUpVote(event);"> ${emoji['+1']} ${this.model.referenceComment.upVotes}</button>
       <button class="down menu-btn" onclick="this.view.onDownVote(event);"> ${emoji['-1']} ${this.model.referenceComment.downVotes}</button>
-      <button class="include menu-btn emoji" onclick="this.view.onInclude(event);"> ${this.model.referenceComment.isIncluded?emoji['black_circle']:emoji['white_circle']}${this.model.referenceComment.isIncluded?" Publish":" Don't publish"}</button>
+      <button class="include menu-btn emoji" onclick="this.view.onInclude(event);"> ${this.model.referenceComment.flags.publish?emoji['black_circle']:emoji['white_circle']}${this.model.referenceComment.flags.publish?" Publish":" Don't publish"}</button>
     </div>
     <div class="content">
       <div class="header">

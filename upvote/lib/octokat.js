@@ -386,7 +386,6 @@ module.exports = (_module$exports = {
     'site_admin': false,
     'suspended': false
   },
-
   'search': {
     'repositories': false,
     'commits': false,
@@ -401,7 +400,8 @@ module.exports = (_module$exports = {
     'comments': false,
     'forks': false
   },
-  'repos': REPO_FIELDS
+  'repos': REPO_FIELDS,
+  'reactions': false
 }, _defineProperty(_module$exports, 'repositories', REPO_FIELDS), _defineProperty(_module$exports, 'licenses', false), _defineProperty(_module$exports, 'authorizations', {
   'clients': false
 }), _defineProperty(_module$exports, 'applications', {

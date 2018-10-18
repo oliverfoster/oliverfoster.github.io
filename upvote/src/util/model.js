@@ -1,15 +1,22 @@
 var ProxyCreate = function(subject, attributes, options) {
   options = options || {};
   options.child = options.child || function(value) {
-    if (value instanceof Collection) return new value.constructor(value, options);
-    if (value instanceof Model) return new value.constructor(value, options);
-    if (value instanceof Array) return new Collection(value, options);
-    return new Model(value, options);
+    var opts = extend({}, options, { preventPropagation: false });
+    if (value instanceof Collection) return new value.constructor(value, opts);
+    if (value instanceof Model) return new value.constructor(value, opts);
+    if (value instanceof Array) return new Collection(value, opts);
+    return new Model(value, opts);
   };
+  subject.__options___ = options;
   subject.__model__ = subject;
-  subject.attributes = attributes;
   subject.__bound__ = {};
-  subject.__children__ = {};
+  if (attributes instanceof Model || attributes instanceof Collection) {
+    subject.attributes = attributes.attributes;
+    subject.__children__ = extend({}, attributes.__children__);
+  } else {
+    subject.attributes = attributes;
+    subject.__children__ = {};
+  }
   subject.__proxy__ = new Proxy(subject, {
     get: function(target, key) {
       if (!this.attributes.hasOwnProperty(key)) return this[key];
@@ -25,22 +32,24 @@ var ProxyCreate = function(subject, attributes, options) {
       this.__children__[key] = options.child.call(this, value);
       this.listenTo(this.__children__[key].__model__, "propagate", function(subkey, subvalue, oldsubvalue) {
         var newkey = key + "." + subkey;
-        var shouldPreventPropagation = (options && options.preventPropagation);
-        if (!shouldPreventPropagation) {
-          this.trigger("propagate", newkey, subvalue, oldsubvalue);
-        }
-        this.trigger("change", newkey, subvalue, oldsubvalue);
-        this.trigger("change:"+newkey, subvalue, oldsubvalue);
+        this.updated(newkey, subvalue, oldsubvalue);
       });
       return this.__children__[key];
     }.bind(subject),
     set: function(target, key, value) {
       var oldValue = this.attributes[key];
       if (value === oldValue) return true;
-      if (value instanceof Model) value = value.attributes;
-      if (value instanceof Collection) value = value.attributes;
+      if (value instanceof Model || value instanceof Collection) {
+        this.__children__[key] = value;
+        value = value.attributes;
+        this.listenTo(this.__children__[key].__model__, "propagate", function(subkey, subvalue, oldsubvalue) {
+          var newkey = key + "." + subkey;
+          this.updated(newkey, subvalue, oldsubvalue);
+        });
+      } else {
+        Reflect.deleteProperty(this.__children__, key);
+      }
       this.attributes[key] = value;
-      Reflect.deleteProperty(this.__children__, key);
       var shouldPreventPropagation = (options && options.preventPropagation);
       if (!shouldPreventPropagation) {
         this.trigger("propagate", key, undefined, oldValue);
@@ -54,12 +63,7 @@ var ProxyCreate = function(subject, attributes, options) {
       if (oldValue === undefined) return true;
       Reflect.deleteProperty(this.attributes, key);
       Reflect.deleteProperty(this.__children__, key);
-      var shouldPreventPropagation = (options && options.preventPropagation);
-      if (!shouldPreventPropagation) {
-        this.trigger("propagate", key, undefined, oldValue);
-      }
-      this.trigger("change", key, undefined, oldValue);
-      this.trigger("change:"+key, undefined, oldValue);
+      this.updated(key, undefined, oldvalue);
       return true;
     }.bind(subject),
     ownKeys: function (target, key) {
@@ -83,7 +87,6 @@ var ProxyCreate = function(subject, attributes, options) {
 var Model = Class.extend({
 
   constructor: function Model(attributes, options) {
-    if (attributes instanceof Model) attributes = attributes.attributes;
     var proxy = ProxyCreate(this, attributes || {}, options);
     typeof this.initialize === "function" && this.initialize();
     return proxy;
@@ -99,6 +102,15 @@ var Model = Class.extend({
 
   toJSON$write$config: function() {
     return this.attributes;
+  },
+
+  updated$write$config: function(name, value, oldvalue) {
+    var shouldPreventPropagation = (this.__options__ && __options__.preventPropagation);
+    if (!shouldPreventPropagation) {
+      this.trigger("propagate", name, value, oldvalue);
+    }
+    this.trigger("change", name, value, oldvalue);
+    this.trigger("change:"+name, value, oldvalue);
   }
 
 }, null, {
@@ -108,7 +120,6 @@ var Model = Class.extend({
 var Collection = List.extend({
 
   constructor: function Collection(attributes, options) {
-    if (attributes instanceof Collection) attributes = attributes.attributes;
     var proxy = ProxyCreate(this, attributes || [], options);
     typeof this.initialize === "function" && this.initialize();
     return proxy;
@@ -124,6 +135,15 @@ var Collection = List.extend({
 
   toJSON$write$config: function() {
     return this.attributes;
+  },
+
+  updated$write$config: function(name, value, oldvalue) {
+    var shouldPreventPropagation = (this.__options__ && __options__.preventPropagation);
+    if (!shouldPreventPropagation) {
+      this.trigger("propagate", name, value, oldvalue);
+    }
+    this.trigger("change", name, value, oldvalue);
+    this.trigger("change:"+name, value, oldvalue);
   }
 
 }, null, {
