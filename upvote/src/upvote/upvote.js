@@ -75,9 +75,9 @@ var Upvote = View.extend({
     this.octo.zen.read(function(err, value) {
       if (!err) return;
       document.cookie = `oauth=;path=/;max-age=31536000;samesite`;
-      upvote.router.replace("#login");
-    });
-    this.repo = upvote.octo.repos(this.user_name, this.repo_name);
+      this.router.replace("#login");
+    }.bind(this));
+    this.repo = this.octo.repos(this.user_name, this.repo_name);
     this.octo.user.fetch().then(function(user) {
       this.user = user;
     }.bind(this));
