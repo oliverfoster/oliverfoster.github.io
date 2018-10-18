@@ -60,6 +60,16 @@ html, body, #wrapper {
   padding-top:  20px;
 }
 
+#logout {
+  float: right;
+  border: 0;
+  height: 42px;
+  color: white;
+  background: transparent;
+  font-weight: 600;
+  font-size: 14px;
+}
+
 .btn {
   margin-top: 20px;
   background-color: #279f43;

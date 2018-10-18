@@ -74,14 +74,19 @@ var Upvote = View.extend({
     this.octo = new Octokat(options);
     this.octo.zen.read(function(err, value) {
       if (!err) return;
-      document.cookie = `oauth=;path=/;max-age=31536000;samesite`;
-      this.router.replace("#login");
+      this.logout();
     }.bind(this));
     this.repo = this.octo.repos(this.user_name, this.repo_name);
     this.octo.user.fetch().then(function(user) {
       this.user = user;
     }.bind(this));
     this.router.push("#queues");
+  },
+
+  logout: function() {
+    document.cookie = `oauth=;path=/;max-age=31536000;samesite`;
+    this.octo = null;
+    this.router.replace("#login");
   },
 
   onBack: function(event) {
@@ -117,6 +122,7 @@ var Upvote = View.extend({
       <li>Upvoter:</li>
       <li>Polls</li>
     </ul>
+    <button id="logout" onclick="this.view.logout();">Logout</button>
   </div>
   <div class="content-container">
     ${seat({ class: UpvoteQueuesView, model: this.model, id: "queues" })}
@@ -133,6 +139,7 @@ var Upvote = View.extend({
       <li><a href="#queues">Polls</a></li>
       <li>Issues</li>
     </ul>
+    <button id="logout" onclick="this.view.logout();">Logout</button>
   </div>
   <div class="content-title">
     <div class="inner">
