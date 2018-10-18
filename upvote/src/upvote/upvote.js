@@ -70,7 +70,7 @@ var Upvote = View.extend({
   },
 
   login: function(options) {
-    options.acceptHeader = upvote.acceptHeader;
+    options.acceptHeader = this.acceptHeader;
     this.octo = new Octokat(options);
     this.octo.zen.read(function(err, value) {
       if (!err) return;
