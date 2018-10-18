@@ -12,14 +12,14 @@ var ProxyCreate = function(subject, attributes, options) {
   subject.__bound__ = {};
   if (attributes instanceof Model || attributes instanceof Collection) {
     subject.attributes = attributes.attributes;
-    subject.__children__ = extend({}, attributes.__children__);
+    subject.__children__ = attributes.__children__;
   } else {
     subject.attributes = attributes;
     subject.__children__ = {};
   }
   subject.__proxy__ = new Proxy(subject, {
     get: function(target, key) {
-      if (!this.attributes.hasOwnProperty(key)) return this[key];
+      if (this[key]) return this[key];
       var value = this.attributes[key];
       var typeOfValue = typeof value;
       switch (typeOfValue) {

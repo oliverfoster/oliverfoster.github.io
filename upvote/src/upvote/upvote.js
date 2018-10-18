@@ -22,6 +22,14 @@ var Upvote = View.extend({
     this.issues = {};
     this.router = new Router();
     this.listenTo(this.router, "change", this.onChange);
+
+    if (this.router.cookie.oauth) {
+      this.login({
+        token :this.router.cookie.oauth
+      });
+      return;
+    }
+
     this.onChange(this.router.hash);
   },
 
@@ -59,6 +67,21 @@ var Upvote = View.extend({
       }
     }
     this.render();
+  },
+
+  login: function(options) {
+    options.acceptHeader = upvote.acceptHeader;
+    this.octo = new Octokat(options);
+    this.octo.zen.read(function(err, value) {
+      if (!err) return;
+      document.cookie = `oauth=;path=/;max-age=31536000;samesite`;
+      upvote.router.replace("#login");
+    });
+    this.repo = upvote.octo.repos(this.user_name, this.repo_name);
+    this.octo.user.fetch().then(function(user) {
+      this.user = user;
+    }.bind(this));
+    this.router.push("#queues");
   },
 
   onBack: function(event) {
@@ -138,27 +161,14 @@ var QueuesModel = Model.extend({
   },
 
   fetchQueues: function() {
-    upvote.issues = upvote.issues || {};
     this.queues = null;
     upvote.repo.issues.fetch({state:"open", labels: upvote.tag_name}).then(function(obj) {
-      this.queues = obj.items.map(this.fetchCachedIssue);
+      this.queues = new IssueCollection(obj.items);
       if (upvote.navigateTo) {
         upvote.router.replace(upvote.navigateTo);
         upvote.navigateTo = null;
       }
     }.bind(this));
-  },
-
-  fetchCachedIssue: function(issue) {
-    upvote.issues[issue.number] = upvote.issues[issue.number] || {};
-    upvote.issues[issue.number].number = issue.number;
-    upvote.issues[issue.number].title = issue.title;
-    upvote.issues[issue.number].body = issue.body;
-    upvote.issues[issue.number].state = issue.state;
-    upvote.issues[issue.number].htmlUrl = issue.htmlUrl;
-    upvote.issues[issue.number].user = issue.user;
-    upvote.issues[issue.number].createdAt = issue.createdAt
-    return upvote.issues[issue.number];
   },
 
   fetchQueue: function() {
@@ -179,21 +189,8 @@ var QueuesModel = Model.extend({
         return true;
       });
       var issues = events.map(function(event) { return event.source.issue; });
-      this.queueItems =  new IssueCollection(issues.map(this.fetchCachedIssue));
-      this.fetchQueueItems();
-    }.bind(this));
-  },
-
-  fetchQueueItems: function() {
-    var parentIssueNumber = upvote.model.queue.number;
-    var parentIssueNumber = this.queue.number;
-    var updated = 0;
-    this.queueItems.forEach(function(issue) {
-      this.calculateReferenceComment(parentIssueNumber, issue);
-      this.fetchReferencedComments(parentIssueNumber, issue.number, function() {
-        updated++;
-        this.calculateReferenceComment(parentIssueNumber, issue);
-        if (updated !== this.queueItems.length) return;
+      this.queueItems =  new IssueCollection(issues);
+      this.queueItems.update(function() {
         this.queueItems.sort(function(a,b) {
           var aRef = a.referenceComment;
           var bRef = b.referenceComment;
@@ -207,85 +204,6 @@ var QueuesModel = Model.extend({
         });
       }.bind(this));
     }.bind(this));
-  },
-
-  calculateReferenceComment: function(parentIssueNumber, issue) {
-    var referenceComment = issue &&
-      issue.referenceComments &&
-      issue.referenceComments[parentIssueNumber] &&
-      issue.referenceComments[parentIssueNumber][issue.referenceComments[parentIssueNumber].length-1];
-    if (!referenceComment) {
-      referenceComment = new CommentModel({});
-    }
-    issue.referenceComment = extend(referenceComment, {
-      upVotes: 0,
-      downVotes: 0,
-      positiveVotes: 0,
-      totalVotes: 0,
-      isIncluded: false,
-      upVotedUsers: [],
-      downVotedUsers: []
-    });
-    defaults(issue.referenceComment, {
-      body: ""
-    });
-    issue.referenceComment &&
-      issue.referenceComment.reactions &&
-      issue.referenceComment.reactions.forEach(function(reaction) {
-        switch (reaction.content) {
-          case "+1":
-            issue.referenceComment.upVotes++;
-            if (!issue.referenceComment.upVotedUsers.includes(reaction.user.login)) {
-              issue.referenceComment.upVotedUsers.push(reaction.user.login);
-            }
-            break;
-          case "-1":
-            issue.referenceComment.downVotes++;
-            if (!issue.referenceComment.upVotedUsers.includes(reaction.user.login)) {
-              issue.referenceComment.downVotedUsers.push(reaction.user.login);
-            }
-            break;
-        }
-      });
-    issue.referenceComment.positiveVotes = issue.referenceComment.upVotes - issue.referenceComment.downVotes;
-    issue.referenceComment.totalVotes = issue.referenceComment.upVotes + issue.referenceComment.downVotes;
-    issue.referenceComment.htmlUrl = referenceComment && referenceComment.htmlUrl || "";
-  },
-
-  fetchReferencedComments: function(parentIssueNumber, issueNumber, callback) {
-    var referenceIssueNumber = upvote.model.queue.number;
-    var rex = new RegExp("(\\#"+referenceIssueNumber+"(\\W|$))|"+upvote.model.queue.htmlUrl);
-    upvote.repo.issues(issueNumber).comments.fetch().then(function(obj) {
-      upvote.issues[issueNumber].comments = new CommentCollection(obj.items, { issueNumber: issueNumber });
-      var count = 0, done = 0;
-      var referenceComments = obj.items.filter(function(comment) {
-        var hasReference = (null !== comment.body.match(rex));
-        if (hasReference) {
-          comment.references = comment.references || {};
-          comment.references[upvote.model.queue.htmlUrl] = true;
-        }
-        count++;
-        this.fetchReferencedCommentReactions(issueNumber, comment.id, function(reactions) {
-          comment.reactions = reactions;
-          done++;
-          if (count !== done) return;
-          callback(upvote.issues[issueNumber]);
-        });
-        return hasReference;
-      }.bind(this));
-      upvote.issues[issueNumber].referenceComments = upvote.issues[issueNumber].referenceComments || {};
-      upvote.issues[issueNumber].referenceComments[parentIssueNumber] = new CommentCollection(referenceComments, {issueNumber: issueNumber});
-    }.bind(this));
-  },
-
-  fetchReferencedCommentReactions: function(issueNumber, commentId, callback) {
-    upvote.repo.issues.comments(commentId).reactions.fetch().then(function(obj) {
-      var comment = upvote.issues[issueNumber].comments.find(function(comment) {
-        return comment.id === commentId;
-      });
-      comment.reactions = obj.items;
-      callback(comment.reactions);
-    }.bind(this));
   }
 
 });
@@ -294,19 +212,73 @@ var IssueModel = Model.extend({
 
   constructor: function IssueModel() {
     return Model.apply(this, arguments);
+  },
+
+  fetchComments: function(callback) {
+    var referenceIssueNumber = upvote.model.queue.number;
+    var rex = new RegExp("(\\#"+referenceIssueNumber+"(\\W|$))|"+upvote.model.queue.htmlUrl);
+    upvote.repo.issues(this.number).comments.fetch().then(function(obj) {
+      this.commentItems = new CommentCollection(obj.items, { issueNumber: this.number });
+      var done = 0;
+      this.commentItems.forEach(function(comment) {
+        comment.hasReference = (null !== comment.body.match(rex));
+        if (comment.hasReference) {
+          comment.references = comment.references || {};
+          comment.references[upvote.model.queue.htmlUrl] = true;
+        }
+        comment.fetchReactions(function() {
+          done++;
+          if (this.commentItems.length !== done) return;
+          callback(this);
+        }.bind(this));
+      }.bind(this));
+    }.bind(this));
+  },
+
+  referenceComment$get: function() {
+    var proxy = this.__proxy__;
+    var parentIssueNumber = upvote.model.queue.number;
+    var referenceComment;
+    if (proxy.commentItems) {
+      for (var i = proxy.commentItems.length-1; i > -1; i--) {
+        if (!proxy.commentItems[i].hasReference) continue;
+        referenceComment = proxy.commentItems[i];
+        break;
+      }
+    }
+    if (!referenceComment) {
+      referenceComment = new CommentModel({
+        body: "",
+        reactions: {}
+      }, {
+        issueNumber: this.attributes.number
+      });
+    }
+    return referenceComment;
   }
 
 });
 
 var IssueCollection = Collection.extend({
 
-  constructor: function CommentCollection(data, options) {
+  constructor: function IssueCollection(data, options) {
     return Collection.call(this, data, {
       child: function(value) {
-        if (value instanceof Array) return new Collection(value, options);
+        if (value instanceof Array) return new IssueCollection(value, options);
         return new IssueModel(value, options);
       }
     });
+  },
+
+  update: function(callback) {
+    var loaded = 0;
+    this.forEach(function(issue) {
+      issue.fetchComments(function(comments) {
+        loaded++;
+        if (loaded !== this.length) return;
+        callback && callback();
+      }.bind(this));
+    }.bind(this));
   }
 
 });
@@ -314,26 +286,41 @@ var IssueCollection = Collection.extend({
 
 var CommentModel = Model.extend({
 
-  constructor: function CommentModel() {
+  constructor: function CommentModel(attributes, options) {
+    attributes.issueNumber = options && options.issueNumber || attributes.issueNumber;
     return Model.apply(this, arguments);
   },
 
-  toggleReaction: function(name, value) {
+  update: function(callback) {
+    upvote.repo.issues.comments(this.id).fetch().then(function(data) {
+      for (var k in this.attributes) {
+        if (!data[k]) continue;
+        this[k] = data[k];
+      }
+      this.fetchReactions(function() {
+        callback && callback();
+      }.bind(this));
+    }.bind(this));
+  },
+
+  toggleReaction: function(name, value, callback) {
+    var complete = function() {
+      this.update(callback);
+    }.bind(this);
     if (value) {
       upvote.repo.issues.comments(this.id).reactions.create({
         content: name
-      });
+      }).then(complete);
     } else {
-      this.reactions.forEach(function(reaction) {
+      this.reactionItems.forEach(function(reaction) {
         if (reaction.content !== name) return;
         if (reaction.user.login !== upvote.user.login) return;
-        upvote.octo.reactions(reaction.id).remove();
-        break;
+        upvote.octo.reactions(reaction.id).remove().then(complete);
       }.bind(this));
     }
   },
 
-  toggleFlag: function(name, value) {
+  toggleFlag: function(name, value, callback) {
     var rex = /\n\[\]\(file\:\/\/upvoter\.flag\?[^)]*\)/g;
     var matches = this.body.match(rex);
     var flags = {};
@@ -359,8 +346,9 @@ var CommentModel = Model.extend({
     }
     var pattern = "\n[](file://upvoter.flag?"+rawFlags.join("&")+")";
     this.body += pattern;
-    upvote.repo.issues.comments(this.id).update({ body: this.body });
-    this.updated("flags", flags, {});
+    upvote.repo.issues.comments(this.id).update({ body: this.body }).then(function() {
+      callback && callback(flags);
+    });
   },
 
   flags$get: function() {
@@ -377,6 +365,34 @@ var CommentModel = Model.extend({
       });
     }
     return flags;
+  },
+
+  votedUsers: function(reactionName) {
+    var users = [];
+    this.reactionItems &&
+    this.reactionItems.forEach(function(reaction) {
+      if (reaction.content !== reactionName) return;
+      if (!users.includes(reaction.user.login)) {
+        users.push(reaction.user.login);
+      }
+    }.bind(this));
+    return users;
+  },
+
+  hasVoted: function(reactionName) {
+    return this.reactionItems &&
+    this.reactionItems.find(function(reaction) {
+      if (reaction.content !== reactionName) return;
+      if (upvote.user.login !== reaction.user.login) return;
+      return true;
+    }.bind(this)) || false;
+  },
+
+  fetchReactions: function(callback) {
+    upvote.repo.issues.comments(this.id).reactions.fetch().then(function(obj) {
+      this.reactionItems = obj.items;
+      callback && callback(this.reactionItems);
+    }.bind(this));
   }
 
 });
@@ -388,7 +404,6 @@ var CommentCollection = Collection.extend({
     return Collection.call(this, data, {
       child: function(value) {
         if (value instanceof Array) return new Collection(value, options);
-        value.issueNumber = this.issueNumber;
         return new CommentModel(value, options);
       }
     });
@@ -399,39 +414,10 @@ var CommentCollection = Collection.extend({
 var LoginView = View.extend({
 
   onClick: function() {
-    upvote.octo = new Octokat({
+    upvote.login({
       username: elements("#username", this.el).value(),
-      password: elements("#password", this.el).value(),
-      acceptHeader: upvote.acceptHeader
+      password: elements("#password", this.el).value()
     });
-    upvote.octo.zen.read(this.logout.bind(this));
-    upvote.repo = upvote.octo.repos(upvote.user_name, upvote.repo_name);
-    upvote.octo.user.fetch().then(function(user) {
-      upvote.user = user;
-    });
-    upvote.router.push("#queues");
-  },
-
-  logout: function(err, value) {
-      if (err) {
-        document.cookie = `oauth=;path=/;max-age=31536000;samesite`;
-        upvote.router.replace("#login");
-      }
-  },
-
-  attach: function() {
-    if (upvote.router.cookie.oauth) {
-      upvote.octo = new Octokat({
-        token: upvote.router.cookie.oauth,
-        acceptHeader: upvote.acceptHeader
-      });
-      upvote.octo.zen.read(this.logout.bind(this));
-      upvote.repo = upvote.octo.repos(upvote.user_name, upvote.repo_name);
-      upvote.octo.user.fetch().then(function(user) {
-        upvote.user = user;
-      });
-      upvote.router.push("#queues");
-    }
   },
 
   template: function() {
@@ -492,16 +478,26 @@ var UpvoteQueuesItemView = View.extend({
     upvote.router.push("#queue");
   },
 
+  onLink: function(event) {
+    event.stopPropagation();
+  },
+
+  onPublish: function(event) {
+    event.stopPropagation();
+  },
+
   template: function() {
     return `
 <div view-container="true" id="${this.id}" class="queues-item tile" onclick="this.view.onClick(event);">
   <div class="inner">
     <div class="menubar">
+      <div class="padding"></div>
+      <button class="up menu-btn" onclick="this.view.onPublish(event);"> ${emoji['speech_balloon']} Publish</button>
     </div>
     <div class="content">
       <div class="header">
         <div class="text">
-          <div class="title"><h1>${this.model.title}<a href="${this.model.htmlUrl}"> <span class="issue-number">#${this.model.number}</span></h1></a></div>
+          <div class="title"><h1>${this.model.title}<a target="_blank" href="${this.model.htmlUrl}" onclick="this.view.onLink(event);"> <span class="issue-number">#${this.model.number}</span></h1></a></div>
           <div class="subtitle">
             <span class="state ${this.model.state}">${this.model.state === "closed" ? svg.closed + " Closed" : svg.open + " Open" }</span>
             <span class="avatar">
@@ -513,7 +509,6 @@ var UpvoteQueuesItemView = View.extend({
       </div>
       <div class="body markdown">${converter.makeHtml(this.model.body)}</div>
       <div class="footer">
-
       </div>
     </div>
   </div>
@@ -551,22 +546,26 @@ var UpvoteQueueView = View.extend({
 var UpvoteQueueItemView = View.extend({
 
   onUpVote: function() {
-
+    var referenceComment = this.model.referenceComment;
+    referenceComment &&
+    referenceComment.toggleReaction("+1", !referenceComment.hasVoted("+1"), function() {
+      this.render();
+    }.bind(this));
   },
 
   onDownVote: function() {
-
+    var referenceComment = this.model.referenceComment;
+    referenceComment &&
+    referenceComment.toggleReaction("-1", !referenceComment.hasVoted("-1"), function() {
+      this.render();
+    }.bind(this));
   },
 
   onInclude: function() {
-    var issue = this.model;
-    var parentIssueNumber = upvote.model.queue.number;
-    var referenceComment = issue &&
-      issue.referenceComments &&
-      issue.referenceComments[parentIssueNumber] &&
-      issue.referenceComments[parentIssueNumber][issue.referenceComments[parentIssueNumber].length-1];
-    referenceComment.toggleFlag("publish", !this.model.referenceComment.flags.publish, function() {
-      upvote.fetchReferencedCommentReactions(issue.number, issue.referenceComment.id, function() {
+    var referenceComment = this.model.referenceComment;
+    referenceComment &&
+    referenceComment.toggleFlag("accept", !this.model.referenceComment.flags.accept, function() {
+      this.model.fetchComments(function() {
         this.render();
       }.bind(this));
     }.bind(this));
@@ -579,9 +578,9 @@ var UpvoteQueueItemView = View.extend({
   <div class="inner">
     <div class="menubar">
       <div class="padding"></div>
-      <button class="up menu-btn" onclick="this.view.onUpVote(event);"> ${emoji['+1']} ${this.model.referenceComment.upVotes}</button>
-      <button class="down menu-btn" onclick="this.view.onDownVote(event);"> ${emoji['-1']} ${this.model.referenceComment.downVotes}</button>
-      <button class="include menu-btn emoji" onclick="this.view.onInclude(event);"> ${this.model.referenceComment.flags.publish?emoji['black_circle']:emoji['white_circle']}${this.model.referenceComment.flags.publish?" Publish":" Don't publish"}</button>
+      <button class="up menu-btn ${this.model.referenceComment.hasVoted("+1")?"voted":""}" onclick="this.view.onUpVote(event);"> ${emoji['+1']} ${or(this.model.referenceComment.reactions['+1'], 0)}</button>
+      <button class="down menu-btn ${this.model.referenceComment.hasVoted("-1")?"voted":""}" onclick="this.view.onDownVote(event);"> ${emoji['-1']} ${or(this.model.referenceComment.reactions['1'], 0)}</button>
+      <button class="include menu-btn emoji" onclick="this.view.onInclude(event);"> ${this.model.referenceComment.flags.accept?emoji['heavy_check_mark']:emoji['x']}${this.model.referenceComment.flags.accept?" Accepted":" Not accepted"}</button>
     </div>
     <div class="content">
       <div class="header">
