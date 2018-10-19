@@ -20,7 +20,7 @@ var Templates = List.extend({
   attachChildren: function(view) {
     var children = view.children;
     if (!Object.keys(children).length) return;
-    var seats = elements(":not([view-container]) [view-container]", view.el);
+    var seats = elements(":not([view]) [view]", view.el);
     for (var i = 0, l = seats.length; i < l; i++) {
       var seat = seats[i];
       var existing = children[seat.id];
@@ -60,7 +60,7 @@ var seat = function(obj) {
   if (!existing) {
     existing = new obj.class(obj);
     templates.children[existing.id] = (existing);
-    return `<${existing.tagName} view-container="true" id="${existing.id}"></${existing.tagName}>`;
+    return `<${existing.tagName} view id="${existing.id}"></${existing.tagName}>`;
   }
   existing.model = obj.model;
   return existing.seat || existing.el.cloneNode().outerHTML;

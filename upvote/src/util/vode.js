@@ -158,6 +158,14 @@
    * @param {Element} target Target DOM element to be represented
    */
   function Vode(target, options) {
+
+    if (options.injectRootAttributes) {
+      for (var name in options.injectRootAttributes) {
+        var value = options.injectRootAttributes[name];
+        target.setAttribute(name, value);
+      }
+    }
+
     // Create a starting array of 1000 items to speed up memory allocation
     this.length = 1000;
     // Keep separate length variable for array data length

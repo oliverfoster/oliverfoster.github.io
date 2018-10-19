@@ -8,6 +8,7 @@ var Router = Class.extend({
     history.replaceState(null, null, "#");
     bindAll(this, "onChange");
     window.addEventListener("popstate", this.onChange);
+    this.initialize && this.initialize.call(this, arguments);
   },
 
   replace: function(hash) {

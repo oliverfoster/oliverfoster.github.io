@@ -70,7 +70,8 @@ var View = Class.extend({
     this.el.view = this;
     var templateString = this.template.call(this);
     vode.updateOuterHTML(this.el, templateString, {
-      ignoreSubTreesWithAttributes: ['view-container']
+      injectRootAttributes: { view: '' },
+      ignoreSubTreesWithAttributes: ['view']
     });
     this.seat = this.el.cloneNode().outerHTML;
     elements("[onchange],[onclick]", this.el).forEach(function(element) {
@@ -82,7 +83,11 @@ var View = Class.extend({
   },
 
   template: function() {
-    return `<div view-container="true" id="${this.id}"></div>`
+    return `<div view id="${this.id}"></div>`
+  },
+
+  clear: function() {
+    this.el.innerHTML = "";
   }
 
 }, {

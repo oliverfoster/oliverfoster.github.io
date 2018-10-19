@@ -1,26 +1,31 @@
 var converter = new showdown.Converter();
 
-var Upvote = View.extend({
-
-  id: "wrapper",
+var Upvote = Class.extend({
 
   router: null,
   octo: null,
   repo: null,
   user: null,
+
   acceptHeader: "application/vnd.github.mockingbird-preview, application/vnd.github.squirrel-girl-preview+json, application/vnd.github.echo-preview+json",
+
   user_name: "oliverfoster",
   repo_name: "adapt-process-recommendations",
   tag_name: "poll",
   // user_name: "adaptlearning",
   // repo_name: "adapt_framework",
   // tag_name: "enhancement",
+
   client_id: "ff5cf9bb34c83b06f2fb",
 
-  initialize: function() {
-    this.model = new QueuesModel();
-    this.issues = {};
+  constructor: function Upvote(options) {
+    this.model = new PollsModel();
     this.router = new Router();
+    this.wrapper = new WrapperView({
+      el: options.el,
+      model: this.model
+    });
+
     this.listenTo(this.router, "change", this.onChange);
 
     if (this.router.cookie.oauth) {
@@ -55,18 +60,18 @@ var Upvote = View.extend({
       this.router.push("#login");
       return;
     }
-    if (name === "#queue") {
+    if (name === "#poll") {
       if (!id) {
-        this.router.replace("#queue="+this.model.queue.number);
+        this.router.replace("#poll="+this.model.poll.number);
         return;
       }
-      if (!this.model.queue && id || this.model.queue.number !== id) {
-        this.model.queue = this.model.queues.find(function(queue) {
-          return queue.number == id;
+      if (!this.model.poll && id || this.model.poll.number !== id) {
+        this.model.poll = this.model.polls.find(function(poll) {
+          return poll.number == id;
         });
       }
     }
-    this.render();
+    this.wrapper.render();
   },
 
   login: function(options) {
@@ -80,97 +85,29 @@ var Upvote = View.extend({
     this.octo.user.fetch().then(function(user) {
       this.user = user;
     }.bind(this));
-    this.router.push("#queues");
+    this.router.push("#polls");
   },
 
   logout: function() {
     document.cookie = `oauth=;path=/;max-age=31536000;samesite`;
     this.octo = null;
     this.router.replace("#login");
-  },
-
-  onBack: function(event) {
-    this.router.push("#queues");
-  },
-
-  template: function() {
-    var parts = this.router.hash.split("=");
-    var name = parts[0];
-    var id = parts[1];
-    switch (name) {
-      case "#login":
-        return `
-<div view-container="true" id="${this.id}" class="login">
-  <div class="content-navigation">
-    <img class="logo logo-light" alt="Adapt Learning" src="https://www.adaptlearning.org/wp-content/uploads/2016/01/nav_logo_white-alt-2-1.png">
-    <ul>
-      <li>Upvoter:</li>
-      <li>Login with GitHub</li>
-    </ul>
-  </div>
-  <div class="content-container">
-    ${seat({ class: LoginView, id: "login" })}
-  </div>
-</div>
-`;
-      case "#queues":
-        return `
-<div view-container="true" id="${this.id}" class="queues">
-  <div class="content-navigation">
-    <img class="logo logo-light" alt="Adapt Learning" src="https://www.adaptlearning.org/wp-content/uploads/2016/01/nav_logo_white-alt-2-1.png">
-    <ul>
-      <li>Upvoter:</li>
-      <li>Polls</li>
-    </ul>
-    <button id="logout" onclick="this.view.logout();">Logout</button>
-  </div>
-  <div class="content-container">
-    ${seat({ class: UpvoteQueuesView, model: this.model, id: "queues" })}
-  </div>
-</div>
-`;
-      case "#queue":
-        return `
-<div view-container="true" id="${this.id}" class="queue">
-  <div class="content-navigation">
-    <img class="logo logo-light" alt="Adapt Learning" src="https://www.adaptlearning.org/wp-content/uploads/2016/01/nav_logo_white-alt-2-1.png">
-    <ul>
-      <li>Upvoter:</li>
-      <li><a href="#queues">Polls</a></li>
-      <li>Issues</li>
-    </ul>
-    <button id="logout" onclick="this.view.logout();">Logout</button>
-  </div>
-  <div class="content-title">
-    <div class="inner">
-      <a href="${this.model.queue.htmlUrl}" target="_blank">${this.model.queue.title} <span class="issue-number">#${this.model.queue.number}</span></a>
-    </div>
-  </div>
-  <div class="content-body">
-    <div class="inner markdown">
-      ${converter.makeHtml(this.model.queue.body)}
-    </div>
-  </div>
-  <div class="content-container">
-    ${seat({ class: UpvoteQueueView, model: this.model, id: "queue" })}
-  </div>
-</div>
-`;
-    }
   }
 
+}, null, {
+  instanceEvents: true
 });
 
-var QueuesModel = Model.extend({
+var PollsModel = Model.extend({
 
-  constructor: function QueuesModel() {
+  constructor: function PollsModel() {
     return Model.apply(this, arguments);
   },
 
-  fetchQueues: function() {
-    this.queues = null;
+  fetchPolls: function() {
+    this.polls = null;
     upvote.repo.issues.fetch({state:"open", labels: upvote.tag_name}).then(function(obj) {
-      this.queues = new IssueCollection(obj.items);
+      this.polls = new IssueCollection(obj.items);
       if (upvote.navigateTo) {
         upvote.router.replace(upvote.navigateTo);
         upvote.navigateTo = null;
@@ -178,10 +115,10 @@ var QueuesModel = Model.extend({
     }.bind(this));
   },
 
-  fetchQueue: function() {
-    this.queueItems = null;
+  fetchPoll: function() {
+    this.pollItems = null;
     var rex = new RegExp(`https\:\/\/github\.com\/${upvote.user_name}\/`);
-    upvote.repo.issues(this.queue.number).timeline.fetch().then(function(obj) {
+    upvote.repo.issues(this.poll.number).timeline.fetch().then(function(obj) {
       var events = obj.items.filter(function(item) {
         var isCrossReferencedIssue = (item.event === "cross-referenced" &&
           item.source.type === "issue");
@@ -196,62 +133,11 @@ var QueuesModel = Model.extend({
         return true;
       });
       var issues = events.map(function(event) { return event.source.issue; });
-      this.queueItems =  new IssueCollection(issues);
-      this.queueItems.update(function() {
-        this.queueItems.order();
+      this.pollItems =  new IssueCollection(issues);
+      this.pollItems.update(function() {
+        this.pollItems.order();
       }.bind(this));
     }.bind(this));
-  }
-
-});
-
-var IssueModel = Model.extend({
-
-  constructor: function IssueModel() {
-    return Model.apply(this, arguments);
-  },
-
-  fetchComments: function(callback) {
-    var referenceIssueNumber = upvote.model.queue.number;
-    var rex = new RegExp("(\\#"+referenceIssueNumber+"(\\W|$))|"+upvote.model.queue.htmlUrl);
-    upvote.repo.issues(this.number).comments.fetch().then(function(obj) {
-      this.commentItems = new CommentCollection(obj.items, { issueNumber: this.number });
-      var done = 0;
-      this.commentItems.forEach(function(comment) {
-        comment.hasReference = (null !== comment.body.match(rex));
-        if (comment.hasReference) {
-          comment.references = comment.references || {};
-          comment.references[upvote.model.queue.htmlUrl] = true;
-        }
-        comment.fetchReactions(function() {
-          done++;
-          if (this.commentItems.length !== done) return;
-          callback(this);
-        }.bind(this));
-      }.bind(this));
-    }.bind(this));
-  },
-
-  referenceComment$get: function() {
-    var proxy = this.__proxy__;
-    var parentIssueNumber = upvote.model.queue.number;
-    var referenceComment;
-    if (proxy.commentItems) {
-      for (var i = proxy.commentItems.length-1; i > -1; i--) {
-        if (!proxy.commentItems[i].hasReference) continue;
-        referenceComment = proxy.commentItems[i];
-        break;
-      }
-    }
-    if (!referenceComment) {
-      referenceComment = new CommentModel({
-        body: "",
-        reactions: {}
-      }, {
-        issueNumber: this.attributes.number
-      });
-    }
-    return referenceComment;
   }
 
 });
@@ -297,6 +183,70 @@ var IssueCollection = Collection.extend({
 
 });
 
+var IssueModel = Model.extend({
+
+  constructor: function IssueModel() {
+    return Model.apply(this, arguments);
+  },
+
+  fetchComments: function(callback) {
+    var referenceIssueNumber = upvote.model.poll.number;
+    var rex = new RegExp("(\\#"+referenceIssueNumber+"(\\W|$))|"+upvote.model.poll.htmlUrl);
+    upvote.repo.issues(this.number).comments.fetch().then(function(obj) {
+      this.commentItems = new CommentCollection(obj.items, { issueNumber: this.number });
+      var done = 0;
+      this.commentItems.forEach(function(comment) {
+        comment.hasReference = (null !== comment.body.match(rex));
+        if (comment.hasReference) {
+          comment.references = comment.references || {};
+          comment.references[upvote.model.poll.htmlUrl] = true;
+        }
+        comment.fetchReactions(function() {
+          done++;
+          if (this.commentItems.length !== done) return;
+          callback(this);
+        }.bind(this));
+      }.bind(this));
+    }.bind(this));
+  },
+
+  referenceComment$get: function() {
+    var proxy = this.__proxy__;
+    var parentIssueNumber = upvote.model.poll.number;
+    var referenceComment;
+    if (proxy.commentItems) {
+      for (var i = proxy.commentItems.length-1; i > -1; i--) {
+        if (!proxy.commentItems[i].hasReference) continue;
+        referenceComment = proxy.commentItems[i];
+        break;
+      }
+    }
+    if (!referenceComment) {
+      referenceComment = new CommentModel({
+        body: "",
+        reactions: {}
+      }, {
+        issueNumber: this.attributes.number
+      });
+    }
+    return referenceComment;
+  }
+
+});
+
+var CommentCollection = Collection.extend({
+
+  constructor: function CommentCollection(data, options) {
+    this.issueNumber = options.issueNumber || data.issueNumber;
+    return Collection.call(this, data, {
+      child: function(value) {
+        if (value instanceof Array) return new Collection(value, options);
+        return new CommentModel(value, options);
+      }
+    });
+  }
+
+});
 
 var CommentModel = Model.extend({
 
@@ -411,21 +361,11 @@ var CommentModel = Model.extend({
 
 });
 
-var CommentCollection = Collection.extend({
-
-  constructor: function CommentCollection(data, options) {
-    this.issueNumber = options.issueNumber || data.issueNumber;
-    return Collection.call(this, data, {
-      child: function(value) {
-        if (value instanceof Array) return new Collection(value, options);
-        return new CommentModel(value, options);
-      }
-    });
-  }
-
-});
-
 var LoginView = View.extend({
+
+  attach: function() {
+    this.clear();
+  },
 
   onClick: function() {
     upvote.login({
@@ -436,7 +376,7 @@ var LoginView = View.extend({
 
   template: function() {
     return `
-<div view-container="true" id="${this.id}">
+<div id="${this.id}" class="content-outer">
   <div class="login">
     <div class="inner">
       <div class="username">
@@ -461,23 +401,148 @@ var LoginView = View.extend({
 
 });
 
-var UpvoteQueuesView = View.extend({
+var WrapperView = View.extend({
+
+  id: "wrapper",
+
+  template: function() {
+    var parts = upvote.router.hash.split("=");
+    var name = parts[0];
+    var id = parts[1];
+    var className = name.slice(1);
+    return `
+<div id="${this.id}" class="${className}">
+  ${seat({ class: NavigationView, id: "content-navigation" })}
+  ${seat({ class: ContentTitleView, id: "content-title" })}
+  ${
+    name === "#poll" ?
+    seat({ class: ContentBodyView, id: "content-body" }) :
+    ""
+  }
+  <div class="content-container">
+    ${
+      name === "#login" ?
+      seat({ class: LoginView, id: "login" }) :
+      name === "#polls" ?
+      seat({ class: PollsView, model: this.model, id: "polls" }) :
+      name === "#poll" ?
+      seat({ class: PollView, model: this.model, id: "poll" }) :
+      ""
+    }
+  </div>
+</div>
+`;
+  }
+
+});
+
+var NavigationView = View.extend({
+
+  template: function() {
+    var parts = upvote.router && upvote.router.hash.split("=") || [`#login`];
+    var name = parts[0];
+    var id = parts[1];
+    var className = name.slice(1);
+    return `
+<div id="${this.id}" class="content-navigation">
+  <img class="logo logo-light" alt="Adapt Learning" src="https://www.adaptlearning.org/wp-content/uploads/2016/01/nav_logo_white-alt-2-1.png">
+  <ul>
+    <li>Upvoter:</li>
+  ${
+    name==="#login" ?
+    `<li>Login with GitHub</li>` :
+    name==="#polls" ?
+    `<li>Polls</li>` :
+    name==="#poll" ?
+    `<li><a href="#polls">Polls</a></li><li>Issues</li>` :
+    ``
+  }
+  </ul>
+  ${
+    name!=="#login" ?
+    `<button id="logout" onclick="upvote.logout();">Logout</button>` :
+    ``
+  }
+</div>
+`;
+  }
+});
+
+var ContentTitleView = View.extend({
+
+  template: function() {
+    var parts = upvote.router && upvote.router.hash.split("=") || [`#login`];
+    var name = parts[0];
+    var id = parts[1];
+    var className = name.slice(1);
+    return `
+<div id="${this.id}" class="content-title">
+  <div class="inner">
+    <div>
+      ${svg.repo}<a class="username" href="https://github.com/${upvote.user_name}" target="_blank"> ${upvote.user_name} </a> / <a class="repo" href="https://github.com/${upvote.user_name}/${upvote.repo_name}" target="_blank"> ${upvote.repo_name} </a>
+    </div>
+  ${
+    name==="#polls"?
+    `<div>
+      ${svg.insight}<a class="polls" href="#polls">polls</a>
+    </div>`:
+    name==="#poll"?
+    `<div>
+      <span>
+        ${svg.insight}<a class="polls" href="#polls">polls</a> / <a class="poll" href="#poll=${upvote.model.poll.number}">${upvote.model.poll.title}</a>
+      </span>
+      <a class="poll" href="${upvote.model.poll.htmlUrl}" target="_blank"><span class="issue-number">#${upvote.model.poll.number}</span></a>
+    </div>`:
+    ``
+  }
+  </div>
+</div>
+`;
+  }
+
+});
+
+var ContentBodyView = View.extend({
+
+  template: function() {
+    var parts = upvote.router.hash.split("=");
+    var name = parts[0];
+    var id = parts[1];
+    switch (name) {
+      case "#login":
+        return ``;
+      case "#polls":
+        return ``;
+      case "#poll":
+        return `
+<div id="${this.id}" class="content-body">
+  <div class="inner markdown">
+    ${converter.makeHtml(upvote.model.poll.body)}
+  </div>
+</div>
+`;
+    }
+  }
+
+});
+
+var PollsView = View.extend({
 
   attach: function() {
-    this.el.innerHTML = "";
-    this.model.fetchQueues();
+    this.clear();
+    this.model.fetchPolls();
   },
 
   template: function() {
     return `
-<div view-container="true" id="${this.id}">
-  ${each(this.model.queues, (item, index)=>{
-    return seat({ class: UpvoteQueuesItemView, model: item, id: "item-"+index });
+<div id="${this.id}" class="content-outer">
+  ${each(this.model.polls, (item, index)=>{
+    return seat({ class: PollsItemView, model: item, id: "item-"+index });
   }, (items)=>{
     if (!items) {
       return '<div class="loading">Loading...</div>';
     }
-    return '<div class="empty">No queues found.</div>';
+    return '<div class="empty">No polls found.</div>';
   })}
 </div>
 `;
@@ -485,11 +550,11 @@ var UpvoteQueuesView = View.extend({
 
 });
 
-var UpvoteQueuesItemView = View.extend({
+var PollsItemView = View.extend({
 
   onClick: function(event) {
-    upvote.model.queue = this.model;
-    upvote.router.push("#queue");
+    upvote.model.poll = this.model;
+    upvote.router.push("#poll");
   },
 
   onLink: function(event) {
@@ -502,7 +567,7 @@ var UpvoteQueuesItemView = View.extend({
 
   template: function() {
     return `
-<div view-container="true" id="${this.id}" class="queues-item tile" onclick="this.view.onClick(event);">
+<div id="${this.id}" class="polls-item tile" onclick="this.view.onClick(event);">
   <div class="inner">
     <div class="menubar">
       <div class="padding"></div>
@@ -533,18 +598,18 @@ var UpvoteQueuesItemView = View.extend({
 });
 
 
-var UpvoteQueueView = View.extend({
+var PollView = View.extend({
 
   attach: function() {
-    this.el.innerHTML = "";
-    this.model.fetchQueue();
+    this.clear();
+    this.model.fetchPoll();
   },
 
   template: function() {
     return `
-<div view-container="true" id="${this.id}">
-  ${each(this.model.queueItems, (item, index)=>{
-     return seat({ class: UpvoteQueueItemView, model: item, id: "item-"+index });
+<div id="${this.id}" class="content-outer">
+  ${each(this.model.pollItems, (item, index)=>{
+     return seat({ class: PollItemView, model: item, id: "item-"+index });
   }, (items)=>{
     if (!items) {
       return '<div class="loading">Loading...</div>';
@@ -557,13 +622,13 @@ var UpvoteQueueView = View.extend({
 
 });
 
-var UpvoteQueueItemView = View.extend({
+var PollItemView = View.extend({
 
   onUpVote: function() {
     var referenceComment = this.model.referenceComment;
     referenceComment &&
     referenceComment.toggleReaction("+1", !referenceComment.hasVoted("+1"), function() {
-      upvote.model.queueItems.order();
+      upvote.model.pollItems.order();
       this.render();
     }.bind(this));
   },
@@ -572,7 +637,7 @@ var UpvoteQueueItemView = View.extend({
     var referenceComment = this.model.referenceComment;
     referenceComment &&
     referenceComment.toggleReaction("-1", !referenceComment.hasVoted("-1"), function() {
-      upvote.model.queueItems.order();
+      upvote.model.pollItems.order();
       this.render();
     }.bind(this));
   },
@@ -590,7 +655,7 @@ var UpvoteQueueItemView = View.extend({
 
   template: function() {
     return `
-<div view-container="true" id="${this.id}" class="queue-item tile">
+<div id="${this.id}" class="poll-item tile">
   <div class="inner">
     <div class="menubar">
       <div class="padding"></div>

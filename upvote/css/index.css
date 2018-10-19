@@ -16,6 +16,7 @@ html, body, #wrapper {
 #wrapper {
   display: flex;
   flex-direction: column;
+  overflow-y: scroll;
 }
 
 #login {
@@ -67,7 +68,7 @@ html, body, #wrapper {
   color: white;
   background: transparent;
   font-weight: 600;
-  font-size: 14px;
+  font-size: small;
 }
 
 .btn {
@@ -116,6 +117,7 @@ html, body, #wrapper {
 .content-navigation li {
   display:  inline-block;
   padding: 0 10px 0 0;
+  font-size: small;
 }
 
 .content-navigation li:last-child {
@@ -123,18 +125,33 @@ html, body, #wrapper {
 }
 
 .content-title {
-  background: #24292e;
-  color: white;
+  background: #fafbfc;
+  color: #0366d6;
   padding: 6px 10px 10px;
   border-top: 1px solid darkgray;
+  border-bottom: 1px solid #e1e4e8;
+  font-size: 1.1em;
 }
 
-.content-title h1 {
-  font-weight: 400;
-  padding: 0;
-  margin: 0;
-  line-height: 1.4;
-  font-size: 1.2em;
+.content-title svg {
+  fill: #959da5;
+  margin-right: 3px;
+}
+
+.content-title a:last-child {
+  font-weight: 600;
+}
+
+.content-title .inner {
+  padding: 10px 0;
+}
+
+.content-title .inner > div {
+  padding: 2px 0;
+}
+
+.content-title .polls {
+  padding-left: 1px;
 }
 
 .content-title .issue-number {
@@ -143,56 +160,73 @@ html, body, #wrapper {
 }
 
 .content-body {
-  padding: 0 15px;
   background: #fafbfc;
-  border: 1px solid #e1e4e8;
+  border-bottom: 1px solid #e1e4e8;
+  padding: 0 10px;
+}
+
+.content-body .inner {
+  padding: 10px 0;
 }
 
 .content-body .markdown {
   background: #fafbfc;
 }
 
+.content-title .inner,
+.content-body .inner {
+  width: 100%;
+  max-width: 980px;
+  margin: auto;
+}
 
-.content-navigation a,
-.content-title a {
+
+.content-navigation a {
   color: white;
+  text-decoration: none;
+}
+
+.content-title a {
+  color: #0366d6;
   text-decoration: none;
 }
 
 .content-container {
   text-align: left;
-  overflow-y: scroll;
   flex: 1;
 }
 
-.queues .tile {
+.content-outer {
+  max-width: 980px;
+  margin: auto;
+}
+
+.polls .tile {
   cursor: pointer;
 }
 
 .tile {
   display: block;
   overflow: hidden;
-  max-width: 980px;
   min-height: 150px;
-  border: 1px solid #bfd3eb;
+  border: 1px solid #e1e4e8;
   border-radius: 3px;
   margin: auto;
-  margin-top: 20px;
+  margin: 24px -1px;
   padding: 0 0 0 0;
 }
 
 .tile .header {
   display: flex;
-  padding-bottom: 10px;
-  padding: 10px;
+  padding: 5px 10px 15px;
   border-bottom: 1px solid #e1e4e8;
-  background-color: #fafbfc;
+  background-color: #f6f8fa;
 }
 
 .tile .avatar img {
   height: 28px;
   width: 28px;
-  margin-right: 5px;
+  margin-right: 2px;
   vertical-align: bottom;
 }
 
@@ -214,10 +248,22 @@ html, body, #wrapper {
 }
 
 .tile .title h1 {
-  font-weight:  400;
+  font-weight:  600;
+  font-size: 1.3em;
   line-height: 1.4;
   margin-top: 0;
   margin-bottom: 5px;
+}
+
+@media (max-width: 980px) {
+  .tile .title h1 {
+    font-weight: 600;
+    font-size: 1.1em;
+  }
+
+  .tile .readline {
+    font-size: 0.8em;
+  }
 }
 
 .tile .subtitle .state {
@@ -273,7 +319,7 @@ html, body, #wrapper {
   width: 100%;
   height: 28px;
   order: 2;
-  border-top: 1px solid #e1e4e8;
+  /* border-top: 1px solid #e1e4e8; */
   font-size: 0;
 }
 
@@ -286,7 +332,7 @@ html, body, #wrapper {
   appearance: none;
   -webkit-appearance: none;
   border: 0;
-  border-left: 1px solid #e1e4e8;
+  /* border-left: 1px solid #e1e4e8; */
   background: white;
   color: #0366d6;
   text-align: left;
@@ -297,6 +343,7 @@ html, body, #wrapper {
 }
 
 .menu-btn.include {
+  order: -1;
   min-width: 130px;
 }
 
