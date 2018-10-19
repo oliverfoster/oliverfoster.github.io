@@ -5,7 +5,6 @@ var Router = Class.extend({
 
   constructor: function Router() {
     this.startHash = this.hash;
-    history.replaceState(null, null, "#");
     bindAll(this, "onChange");
     window.addEventListener("popstate", this.onChange);
     this.initialize && this.initialize.call(this, arguments);

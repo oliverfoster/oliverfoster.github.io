@@ -57,7 +57,8 @@ var Upvote = Class.extend({
     var id = parts[1];
     if (!this.octo && hash !== "#login") {
       this.navigateTo = this.router.startHash;
-      this.router.push("#login");
+      if (this.navigateTo === "#login") this.navigateTo = "";
+      this.router.replace("#login");
       return;
     }
     if (name === "#poll") {
@@ -86,6 +87,7 @@ var Upvote = Class.extend({
       this.user = user;
     }.bind(this));
     this.navigateTo = this.router.startHash;
+    if (this.navigateTo === "#login") this.navigateTo = "";
     this.router.replace("#polls");
   },
 
