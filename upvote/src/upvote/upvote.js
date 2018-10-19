@@ -85,6 +85,7 @@ var Upvote = Class.extend({
     this.octo.user.fetch().then(function(user) {
       this.user = user;
     }.bind(this));
+    this.navigateTo = this.router.startHash;
     this.router.push("#polls");
   },
 
