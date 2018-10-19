@@ -297,6 +297,13 @@ var IssueModel = Model.extend({
         callback && callback();
       }.bind(this));
     }.bind(this));
+  },
+
+  isAssignee$get: function() {
+    return Boolean(this.attributes.assignees.find(function(assignee) {
+      if (assignee.login !== upvote.user.login) return;
+      return true;
+    }));
   }
 
 });
@@ -639,7 +646,10 @@ var PollsItemView = View.extend({
   <div class="inner">
     <div class="menubar">
       <div class="padding"></div>
-      <button class="publish menu-btn" onclick="this.view.onPublish(event);"> ${emoji['speech_balloon']} Publish</button>
+      ${this.model&&this.model.isAssignee?
+        `<button class="publish menu-btn" onclick="this.view.onPublish(event);"> ${emoji['speech_balloon']} Publish</button>`:
+        ``
+      }
     </div>
     <div class="content">
       <div class="header">
@@ -702,7 +712,6 @@ var PollItemView = View.extend({
     var referenceComment = this.model.referenceComment;
     referenceComment &&
     referenceComment.toggleReaction("+1", !referenceComment.hasVoted("+1"), function() {
-      upvote.model.poll.pollIssues.order();
       this.render();
     }.bind(this));
   },
@@ -711,7 +720,6 @@ var PollItemView = View.extend({
     var referenceComment = this.model.referenceComment;
     referenceComment &&
     referenceComment.toggleReaction("-1", !referenceComment.hasVoted("-1"), function() {
-      upvote.model.poll.pollIssues.order();
       this.render();
     }.bind(this));
   },
@@ -735,7 +743,10 @@ var PollItemView = View.extend({
       <div class="padding"></div>
       <button class="up menu-btn ${this.model.referenceComment.hasVoted("+1")?"voted":""}" onclick="this.view.onUpVote(event);"> ${emoji['+1']} ${or(this.model.referenceComment.reactions['+1'], 0)}</button>
       <button class="down menu-btn ${this.model.referenceComment.hasVoted("-1")?"voted":""}" onclick="this.view.onDownVote(event);"> ${emoji['-1']} ${or(this.model.referenceComment.reactions['1'], 0)}</button>
-      <button class="include menu-btn emoji" onclick="this.view.onInclude(event);"> ${this.model.referenceComment.flags.accept?emoji['heavy_check_mark']:emoji['x']}${this.model.referenceComment.flags.accept?" Accepted":" Not accepted"}</button>
+      ${this.model.parentIssue&&this.model.parentIssue.isAssignee?
+      `<button class="include menu-btn emoji" onclick="this.view.onInclude(event);"> ${this.model.referenceComment.flags.accept?emoji['heavy_check_mark']:emoji['x']}${this.model.referenceComment.flags.accept?" Accepted":" Not accepted"}</button>`:
+      ``
+      }
     </div>
     <div class="content">
       <div class="header">

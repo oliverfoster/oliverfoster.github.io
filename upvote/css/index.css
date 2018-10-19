@@ -19,6 +19,11 @@ html, body, #wrapper {
   overflow-y: scroll;
 }
 
+.loading {
+  padding: 10px 0;
+  font-size: 0.9em;
+}
+
 #login {
   max-width: 340px;
   min-height: 80%;
