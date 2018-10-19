@@ -116,31 +116,6 @@ var PollsModel = Model.extend({
         upvote.navigateTo = null;
       }
     }.bind(this));
-  },
-
-  fetchPoll: function() {
-    this.pollItems = null;
-    var rex = new RegExp(`https\:\/\/github\.com\/${upvote.user_name}\/`);
-    upvote.repo.issues(this.poll.number).timeline.fetch().then(function(obj) {
-      var events = obj.items.filter(function(item) {
-        var isCrossReferencedIssue = (item.event === "cross-referenced" &&
-          item.source.type === "issue");
-        if (!isCrossReferencedIssue) return;
-        var issue = item.source.issue;
-        var isNativeToRepo = Boolean(issue.htmlUrl.match(rex));
-        if (!isNativeToRepo) return;
-        var hideFromPoll = issue.labels.find(function(label) {
-          return label.name === "poll-hide";
-        });
-        if (hideFromPoll) return;
-        return true;
-      });
-      var issues = events.map(function(event) { return event.source.issue; });
-      this.pollItems =  new IssueCollection(issues);
-      this.pollItems.update(function() {
-        this.pollItems.order();
-      }.bind(this));
-    }.bind(this));
   }
 
 });
@@ -148,6 +123,7 @@ var PollsModel = Model.extend({
 var IssueCollection = Collection.extend({
 
   constructor: function IssueCollection(data, options) {
+    this.parentIssue = options && options.parentIssue;
     return Collection.call(this, data, {
       child: function(value) {
         if (value instanceof Array) return new IssueCollection(value, options);
@@ -159,7 +135,7 @@ var IssueCollection = Collection.extend({
   update: function(callback) {
     var loaded = 0;
     this.forEach(function(issue) {
-      issue.fetchComments(function(comments) {
+      issue.fetchReferencingComments(function(comments) {
         loaded++;
         if (loaded !== this.length) return;
         callback && callback();
@@ -182,31 +158,32 @@ var IssueCollection = Collection.extend({
       }
       return positiveDifference;
     });
+    return this;
   }
 
 });
 
 var IssueModel = Model.extend({
 
-  constructor: function IssueModel() {
+  constructor: function IssueModel(value, options) {
+    this.parentIssue = options && options.parentIssue;
     return Model.apply(this, arguments);
   },
 
-  fetchComments: function(callback) {
-    var referenceIssueNumber = upvote.model.poll.number;
-    var rex = new RegExp("(\\#"+referenceIssueNumber+"(\\W|$))|"+upvote.model.poll.htmlUrl);
+  fetchReferencingComments: function(callback) {
+    var rex = new RegExp("(\\#"+this.parentIssue.number+"(\\W|$))|"+this.parentIssue.htmlUrl);
     upvote.repo.issues(this.number).comments.fetch().then(function(obj) {
-      this.commentItems = new CommentCollection(obj.items, { issueNumber: this.number });
+      this.referenceCommentItems = new CommentCollection(obj.items, { issueNumber: this.number });
       var done = 0;
-      this.commentItems.forEach(function(comment) {
+      this.referenceCommentItems.forEach(function(comment) {
         comment.hasReference = (null !== comment.body.match(rex));
         if (comment.hasReference) {
           comment.references = comment.references || {};
-          comment.references[upvote.model.poll.htmlUrl] = true;
+          comment.references[this.parentIssue.htmlUrl] = true;
         }
         comment.fetchReactions(function() {
           done++;
-          if (this.commentItems.length !== done) return;
+          if (this.referenceCommentItems.length !== done) return;
           callback(this);
         }.bind(this));
       }.bind(this));
@@ -215,12 +192,11 @@ var IssueModel = Model.extend({
 
   referenceComment$get: function() {
     var proxy = this.__proxy__;
-    var parentIssueNumber = upvote.model.poll.number;
     var referenceComment;
-    if (proxy.commentItems) {
-      for (var i = proxy.commentItems.length-1; i > -1; i--) {
-        if (!proxy.commentItems[i].hasReference) continue;
-        referenceComment = proxy.commentItems[i];
+    if (proxy.referenceCommentItems) {
+      for (var i = proxy.referenceCommentItems.length-1; i > -1; i--) {
+        if (!proxy.referenceCommentItems[i].hasReference) continue;
+        referenceComment = proxy.referenceCommentItems[i];
         break;
       }
     }
@@ -233,6 +209,94 @@ var IssueModel = Model.extend({
       });
     }
     return referenceComment;
+  },
+
+  fetchComments: function(callback) {
+    upvote.repo.issues(this.number).comments.fetch().then(function(obj) {
+      this.commentItems = new CommentCollection(obj.items, { issueNumber: this.number });
+      callback && callback();
+    }.bind(this));
+  },
+
+  publish: function() {
+    this.fetchPollIssues(function() {
+
+      var table = [["Issue #", "Issue title", "Positive votes", "+1", "-1"]];
+      this.pollIssues.order().filter(function(pollIssue) {
+        if (pollIssue.state !== "open") return;
+        if (!pollIssue.referenceComment) return;
+        if (!pollIssue.referenceComment.flags.accept) return;
+        return true;
+      }).forEach(function(issue) {
+        var comment = issue.referenceComment;
+        table.push([
+          `[#${issue.number}](${issue.htmlUrl})`,
+          `[${issue.title}](${issue.htmlUrl})`,
+          (comment.reactions['+1'] - comment.reactions['1']),
+          comment.reactions['+1'],
+          comment.reactions['1']
+        ]);
+      });
+
+      var markdown = `### Poll Results - ${this.title}\n\n`;
+      table.forEach(function(row, index) {
+        var rowString = "| " + row.join(" | ") + " |\n";
+        if (index !== 0) return markdown += rowString;
+        rowString += "| " + (new Array(row.length)).join("----|----") + " |\n";
+        return markdown += rowString;
+      });
+
+      this.fetchComments(function() {
+        var resultsComments = this.commentItems.filter(function(comment) {
+          return comment.flags['results'];
+        }).reverse();
+
+        if (resultsComments.length) {
+          upvote.repo.issues.comments(resultsComments[0].id).update({
+            body: markdown + "\n[](file://upvoter.flag?results=1)\n"
+          }).then(function() {
+            window.open(this.htmlUrl);
+          }.bind(this));
+          return;
+        }
+
+        upvote.repo.issues(this.number).comments.create({
+          body: markdown + "\n[](file://upvoter.flag?results=1)\n"
+        }).then(function() {
+          window.open(this.htmlUrl);
+        }.bind(this));
+
+      }.bind(this));
+
+    }.bind(this));
+  },
+
+  fetchPollIssues: function(callback) {
+    this.pollIssues = null;
+    var rex = new RegExp(`https\:\/\/github\.com\/${upvote.user_name}\/`);
+    upvote.repo.issues(this.number).timeline.fetch().then(function(obj) {
+      var events = obj.items.filter(function(item) {
+        var isCrossReferencedIssue = (item.event === "cross-referenced" &&
+          item.source.type === "issue");
+        if (!isCrossReferencedIssue) return;
+        var issue = item.source.issue;
+        var isNativeToRepo = Boolean(issue.htmlUrl.match(rex));
+        if (!isNativeToRepo) return;
+        var hideFromPoll = issue.labels.find(function(label) {
+          return label.name === "poll-hide";
+        });
+        if (hideFromPoll) return;
+        return true;
+      });
+      var issues = events.map(function(event) { return event.source.issue; });
+      this.pollIssues =  new IssueCollection(issues, {
+        parentIssue: this
+      });
+      this.pollIssues.update(function() {
+        this.pollIssues.order();
+        callback && callback();
+      }.bind(this));
+    }.bind(this));
   }
 
 });
@@ -429,7 +493,7 @@ var WrapperView = View.extend({
       name === "#polls" ?
       seat({ class: PollsView, model: this.model, id: "polls" }) :
       name === "#poll" ?
-      seat({ class: PollView, model: this.model, id: "poll" }) :
+      seat({ class: PollView, model: this.model.poll, id: "poll" }) :
       ""
     }
   </div>
@@ -566,6 +630,7 @@ var PollsItemView = View.extend({
 
   onPublish: function(event) {
     event.stopPropagation();
+    this.model.publish();
   },
 
   template: function() {
@@ -574,7 +639,7 @@ var PollsItemView = View.extend({
   <div class="inner">
     <div class="menubar">
       <div class="padding"></div>
-      <button class="up menu-btn" onclick="this.view.onPublish(event);"> ${emoji['speech_balloon']} Publish</button>
+      <button class="publish menu-btn" onclick="this.view.onPublish(event);"> ${emoji['speech_balloon']} Publish</button>
     </div>
     <div class="content">
       <div class="header">
@@ -605,13 +670,15 @@ var PollView = View.extend({
 
   attach: function() {
     this.clear();
-    this.model.fetchPoll();
+    this.model.fetchPollIssues(function() {
+      this.render();
+    }.bind(this));
   },
 
   template: function() {
     return `
 <div id="${this.id}" class="content-outer">
-  ${each(this.model.pollItems, (item, index)=>{
+  ${each(this.model.pollIssues, (item, index)=>{
      return seat({ class: PollItemView, model: item, id: "item-"+index });
   }, (items)=>{
     if (!items) {
@@ -631,7 +698,7 @@ var PollItemView = View.extend({
     var referenceComment = this.model.referenceComment;
     referenceComment &&
     referenceComment.toggleReaction("+1", !referenceComment.hasVoted("+1"), function() {
-      upvote.model.pollItems.order();
+      upvote.model.poll.pollIssues.order();
       this.render();
     }.bind(this));
   },
@@ -640,7 +707,7 @@ var PollItemView = View.extend({
     var referenceComment = this.model.referenceComment;
     referenceComment &&
     referenceComment.toggleReaction("-1", !referenceComment.hasVoted("-1"), function() {
-      upvote.model.pollItems.order();
+      upvote.model.poll.pollIssues.order();
       this.render();
     }.bind(this));
   },
@@ -649,7 +716,7 @@ var PollItemView = View.extend({
     var referenceComment = this.model.referenceComment;
     referenceComment &&
     referenceComment.toggleFlag("accept", !this.model.referenceComment.flags.accept, function() {
-      this.model.fetchComments(function() {
+      this.model.fetchReferencingComments(function() {
         this.render();
       }.bind(this));
     }.bind(this));
