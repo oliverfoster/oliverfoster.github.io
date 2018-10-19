@@ -230,8 +230,8 @@ var IssueModel = Model.extend({
       }).forEach(function(issue) {
         var comment = issue.referenceComment;
         table.push([
-          `[#${issue.number}](${issue.htmlUrl})`,
-          `[${issue.title}](${issue.htmlUrl})`,
+          `[#${issue.number}](${comment.htmlUrl})`,
+          `[${issue.title}](${comment.htmlUrl})`,
           (comment.reactions['+1'] - comment.reactions['1']),
           comment.reactions['+1'],
           comment.reactions['1']
@@ -693,6 +693,10 @@ var PollView = View.extend({
 });
 
 var PollItemView = View.extend({
+
+  attach: function() {
+    this.model.parentIssue = upvote.model.poll;
+  },
 
   onUpVote: function() {
     var referenceComment = this.model.referenceComment;
