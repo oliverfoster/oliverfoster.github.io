@@ -219,6 +219,8 @@ var IssueModel = Model.extend({
   },
 
   publish: function() {
+    this.publishing = true;
+    upvote.wrapper.showLoading = true;
     this.fetchPollIssues(function() {
 
       var table = [["Issue #", "Issue title", "Positive votes", "+1", "-1"]];
@@ -256,6 +258,8 @@ var IssueModel = Model.extend({
             body: markdown + "\n[](file://upvoter.flag?results=1)\n"
           }).then(function() {
             window.open(this.htmlUrl);
+            upvote.wrapper.showLoading = false;
+            this.publishing = false;
           }.bind(this));
           return;
         }
@@ -264,6 +268,8 @@ var IssueModel = Model.extend({
           body: markdown + "\n[](file://upvoter.flag?results=1)\n"
         }).then(function() {
           window.open(this.htmlUrl);
+          upvote.wrapper.showLoading = false;
+          this.publishing = false;
         }.bind(this));
 
       }.bind(this));
@@ -301,7 +307,7 @@ var IssueModel = Model.extend({
 
   isAssignee$get: function() {
     return Boolean(this.attributes.assignees.find(function(assignee) {
-      if (assignee.login !== upvote.user.login) return;
+      if (assignee.login !== (upvote.user && upvote.user.login)) return;
       return true;
     }));
   }
@@ -435,6 +441,123 @@ var CommentModel = Model.extend({
 
 });
 
+var WrapperView = View.extend({
+
+  id: "wrapper",
+
+  showLoading$set: function(value) {
+    //this.model.showLoading = value;
+  },
+
+  template: function() {
+    var parts = upvote.router.hash.split("=");
+    var name = parts[0];
+    var id = parts[1];
+    var className = name.slice(1);
+    return `
+<div id="${this.id}" class="${className}">
+  ${seat({ class: NavigationView, id: "content-navigation" })}
+  ${seat({ class: ContentTitleView, id: "content-title" })}
+  ${
+    name === "#poll" ?
+    seat({ class: ContentBodyView, id: "content-body" }) :
+    ""
+  }
+  <div class="content-container">
+    ${
+      name === "#login" ?
+      seat({ class: LoginView, id: "login" }) :
+      name === "#polls" ?
+      seat({ class: PollsView, model: this.model, id: "polls" }) :
+      name === "#poll" ?
+      seat({ class: PollView, model: this.model.poll, id: "poll" }) :
+      ""
+    }
+  </div>
+  ${seat({ class: ToolTipView, id: "tooltip"})}
+  <div id="loading" class="${!this.model.showLoading?'hide':'show'}"><div class="text">Loading...</div></div>
+</div>
+`;
+  }
+
+});
+
+var ToolTipView = View.extend({
+
+  initialize: function() {
+    bindAll(this, "onMouseOver", "onMouseOut");
+    elements(document.body)
+      .on({
+        "mouseover": this.onMouseOver,
+        "mouseout": this.onMouseOut
+      });
+  },
+
+  onMouseOver: function(event) {
+    var element = elements(event.path).find(function(el) {
+      return el.matches("[tooltip]");
+    })
+    if (!element) return;
+    this.model.show = true;
+    this.model.text = element.getAttribute("tooltip");
+    this.$("#tooltip-text")[0].innerHTML = this.model.text;
+
+    var elRect = element.getBoundingClientRect();
+    elRect.height = element.clientHeight;
+    elRect.width = element.clientWidth;
+
+    var ttRect = {
+      height: this.el.clientHeight + 8,
+      width: this.el.clientWidth
+    };
+    var vpRect = {
+      height: window.innerHeight,
+      width: window.innerWidth
+    };
+
+    var overTop = (elRect.top - ttRect.height < 0);
+    var underBottom = (elRect.top + elRect.height + ttRect.height > vpRect.height);
+    if (overTop && underBottom) {
+      // display up to top
+    } else if (overTop) {
+      // display under bottom
+    } else {
+      // display over top
+      this.model.top = elRect.top - ttRect.height;
+    }
+
+    var overLeft = (elRect.left - ttRect.width < 0);
+    var underRight = (elRect.left + elRect.width + ttRect.width > vpRect.width);
+    if (overLeft && underRight) {
+      // display up to left
+    } else if (overLeft) {
+      // display under right
+    } else {
+      // display over left
+      this.model.left = elRect.left - (ttRect.width / 2);
+    }
+
+  },
+
+  onMouseOut: function(event) {
+    var element = elements(event.path).find(function(el) {
+      return el.matches("[tooltip]");
+    })
+    if (!element) return;
+    this.model.show = false;
+  },
+
+  template: function() {
+    return `
+<div id="${this.id}" class="${this.model.show?"show":""}" style="top:${this.model.top}px;left:${this.model.left}px;">
+<div id="tooltip-text" view></div>
+<div id="tooltip-triangle" style="left:${this.model.triangleLeft}px;"></div>
+</div>
+`;
+  }
+
+});
+
 var LoginView = View.extend({
 
   attach: function() {
@@ -475,41 +598,6 @@ var LoginView = View.extend({
 
 });
 
-var WrapperView = View.extend({
-
-  id: "wrapper",
-
-  template: function() {
-    var parts = upvote.router.hash.split("=");
-    var name = parts[0];
-    var id = parts[1];
-    var className = name.slice(1);
-    return `
-<div id="${this.id}" class="${className}">
-  ${seat({ class: NavigationView, id: "content-navigation" })}
-  ${seat({ class: ContentTitleView, id: "content-title" })}
-  ${
-    name === "#poll" ?
-    seat({ class: ContentBodyView, id: "content-body" }) :
-    ""
-  }
-  <div class="content-container">
-    ${
-      name === "#login" ?
-      seat({ class: LoginView, id: "login" }) :
-      name === "#polls" ?
-      seat({ class: PollsView, model: this.model, id: "polls" }) :
-      name === "#poll" ?
-      seat({ class: PollView, model: this.model.poll, id: "poll" }) :
-      ""
-    }
-  </div>
-</div>
-`;
-  }
-
-});
-
 var NavigationView = View.extend({
 
   template: function() {
@@ -521,14 +609,14 @@ var NavigationView = View.extend({
 <div id="${this.id}" class="content-navigation">
   <img class="logo logo-light" alt="Adapt Learning" src="https://www.adaptlearning.org/wp-content/uploads/2016/01/nav_logo_white-alt-2-1.png">
   <ul>
-    <li>Upvoter:</li>
+    <li>Adapt Democracy </li>
   ${
     name==="#login" ?
     `<li>Login with GitHub</li>` :
     name==="#polls" ?
-    `<li>Polls</li>` :
+    `<li>Open polls</li>` :
     name==="#poll" ?
-    `<li><a href="#polls">Polls</a></li><li>Issues</li>` :
+    `<li><a href="#polls">Open polls</a></li><li>Issues</li>` :
     ``
   }
   </ul>
@@ -558,12 +646,12 @@ var ContentTitleView = View.extend({
   ${
     name==="#polls"?
     `<div>
-      ${svg.insight}<a class="polls" href="#polls">polls</a>
+      ${svg.insight}<a class="polls" href="#polls">Open polls</a>
     </div>`:
     name==="#poll"?
     `<div>
       <span>
-        ${svg.insight}<a class="polls" href="#polls">polls</a> / <a class="poll" href="#poll=${upvote.model.poll.number}">${upvote.model.poll.title}</a>
+        ${svg.insight}<a class="polls" href="#polls">Open polls</a> / <a class="poll" href="#poll=${upvote.model.poll.number}">${upvote.model.poll.title}</a>
       </span>
       <a class="poll" href="${upvote.model.poll.htmlUrl}" target="_blank"><span class="issue-number">#${upvote.model.poll.number}</span></a>
     </div>`:
@@ -616,7 +704,7 @@ var PollsView = View.extend({
     if (!items) {
       return '<div class="loading">Loading...</div>';
     }
-    return '<div class="empty">No polls found.</div>';
+    return '<div class="empty">No open polls found.</div>';
   })}
 </div>
 `;
@@ -640,14 +728,23 @@ var PollsItemView = View.extend({
     this.model.publish();
   },
 
+  onMilestone: function(event) {
+    event.stopPropagation();
+    //this.model.publish();
+  },
+
   template: function() {
     return `
-<div id="${this.id}" class="polls-item tile" onclick="this.view.onClick(event);">
+<div id="${this.id}" class="polls-item tile">
   <div class="inner">
     <div class="menubar">
       <div class="padding"></div>
+      <button class="vote menu-btn" onclick="this.view.onClick(event);">${emoji['ballot_box_with_check']} Vote on issues</button>
       ${this.model&&this.model.isAssignee?
-        `<button class="publish menu-btn" onclick="this.view.onPublish(event);"> ${emoji['speech_balloon']} Publish</button>`:
+        `
+        <button ${this.model.publishing?"disabled":""} class="publish menu-btn" onclick="this.view.onPublish(event);"> ${emoji['speech_balloon']} Publish results</button>
+        <button ${this.model.milestoning?"disabled":""} class="milestone menu-btn" onclick="this.view.onMilestone(event);"> ${svg['milestone']} Make milestone</button>
+        `:
         ``
       }
     </div>
@@ -694,7 +791,7 @@ var PollView = View.extend({
     if (!items) {
       return '<div class="loading">Loading...</div>';
     }
-    return '<div class="empty">No referenced issues found.</div>';
+    return '<div class="empty">There are no issues associated with the poll yet.</div>';
   })}
 </div>
 `;
@@ -741,8 +838,8 @@ var PollItemView = View.extend({
   <div class="inner">
     <div class="menubar">
       <div class="padding"></div>
-      <button class="up menu-btn ${this.model.referenceComment.hasVoted("+1")?"voted":""}" onclick="this.view.onUpVote(event);"> ${emoji['+1']} ${or(this.model.referenceComment.reactions['+1'], 0)}</button>
-      <button class="down menu-btn ${this.model.referenceComment.hasVoted("-1")?"voted":""}" onclick="this.view.onDownVote(event);"> ${emoji['-1']} ${or(this.model.referenceComment.reactions['1'], 0)}</button>
+      <button class="up menu-btn ${this.model.referenceComment.hasVoted("+1")?"voted":""}" tooltip="${this.model.referenceComment.hasVoted("+1")?"Voted +1.":"Not voted +1."}" onclick="this.view.onUpVote(event);"> ${emoji['+1']} ${or(this.model.referenceComment.reactions['+1'], 0)}</button>
+      <button class="down menu-btn ${this.model.referenceComment.hasVoted("-1")?"voted":""}" tooltip="${this.model.referenceComment.hasVoted("-1")?"Voted -1.":"Not voted -1."}"  onclick="this.view.onDownVote(event);"> ${emoji['-1']} ${or(this.model.referenceComment.reactions['1'], 0)}</button>
       ${this.model.parentIssue&&this.model.parentIssue.isAssignee?
       `<button class="include menu-btn emoji" onclick="this.view.onInclude(event);"> ${this.model.referenceComment.flags.accept?emoji['heavy_check_mark']:emoji['x']}${this.model.referenceComment.flags.accept?" Accepted":" Not accepted"}</button>`:
       ``

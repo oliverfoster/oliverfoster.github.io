@@ -2,26 +2,82 @@
   box-sizing:  border-box;
 }
 
+html {
+  height: 100%;
+  overflow-y: hidden;
+}
+
+body {
+  height: 100%;
+  overflow-y: scroll;
+}
+
 html, body, #wrapper {
   box-sizing: border-box;
   padding: 0;
   margin: 0;
   width: 100%;
-  height: 100%;
-  overflow: hidden;
+  overflow-x: hidden;
+  min-height: 100%;
   font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
   background-color: #fff;
+}
+
+button {
+  cursor: pointer;
 }
 
 #wrapper {
   display: flex;
   flex-direction: column;
-  overflow-y: scroll;
 }
 
-.loading {
-  padding: 10px 0;
+#loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  cursor: wait;
+}
+
+#loading.hide {
+  display: none;
+}
+
+#loading.show {
+  display: block;
+}
+
+.loading,
+.empty {
+  padding: 10px;
   font-size: 0.9em;
+}
+
+#tooltip {
+  position: fixed;
+  padding: 4px 6px;
+  border-radius: 3px;
+  visibility: hidden;
+  background: #24292e;
+  color: white;
+}
+
+#tooltip.show {
+  visibility: visible;
+}
+
+#tooltip-triangle {
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 8px solid #24292e;
+  border-radius: 1px;
+  width: 0;
+  height: 0;
+  position: absolute;
+  bottom: -8px;
+  left: 78px;
 }
 
 #login {
@@ -210,10 +266,6 @@ html, body, #wrapper {
   margin: auto;
 }
 
-.polls .tile {
-  cursor: pointer;
-}
-
 .tile {
   display: block;
   overflow: hidden;
@@ -348,6 +400,12 @@ html, body, #wrapper {
   cursor: pointer;
 }
 
+.menu-btn:disabled {
+  color: black;
+  opacity: 0.5;
+  cursor: wait;
+}
+
 .menu-btn:hover {
   background-color: #f1f8ff;
 }
@@ -356,7 +414,8 @@ html, body, #wrapper {
   background-color: #f1f8ff;
 }
 
-.menu-btn.publish {
+.menu-btn.publish,
+.menu-btn.milestone {
   order: -1;
 }
 

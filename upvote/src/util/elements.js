@@ -27,7 +27,7 @@ var Elements = List.extend({
     return new Elements(items);
   },
 
-  find: function(selector) {
+  query: function(selector) {
     var result = new Elements();
     this.forEach(function(item) {
       result.push.apply(result, item.querySelectorAll(selector));

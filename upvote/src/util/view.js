@@ -55,7 +55,7 @@ var View = Class.extend({
   },
 
   $: function(selector) {
-    return this.$el.find(selector);
+    return this.$el.query(selector);
   },
 
   render: function() {
