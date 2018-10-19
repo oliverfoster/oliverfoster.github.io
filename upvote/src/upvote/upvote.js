@@ -86,7 +86,7 @@ var Upvote = Class.extend({
       this.user = user;
     }.bind(this));
     this.navigateTo = this.router.startHash;
-    this.router.push("#polls");
+    this.router.replace("#polls");
   },
 
   logout: function() {
