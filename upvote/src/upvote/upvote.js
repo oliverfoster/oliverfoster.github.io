@@ -19,7 +19,7 @@ var Upvote = Class.extend({
   client_id: "ff5cf9bb34c83b06f2fb",
 
   constructor: function Upvote(options) {
-    this.model = new PollsModel();
+    this.model = new RepoModel();
     this.router = new Router();
     this.wrapper = new WrapperView({
       el: options.el,
@@ -101,13 +101,13 @@ var Upvote = Class.extend({
   instanceEvents: true
 });
 
-var PollsModel = Model.extend({
+var RepoModel = Model.extend({
 
-  constructor: function PollsModel() {
+  constructor: function RepoModel() {
     return Model.apply(this, arguments);
   },
 
-  fetchPolls: function() {
+  fetchPolls: function(callback) {
     this.polls = null;
     upvote.repo.issues.fetch({state:"open", labels: upvote.tag_name}).then(function(obj) {
       this.polls = new IssueCollection(obj.items);
@@ -115,6 +115,23 @@ var PollsModel = Model.extend({
         upvote.router.replace(upvote.navigateTo);
         upvote.navigateTo = null;
       }
+      callback && callback();
+    }.bind(this));
+  },
+
+  fetchMilestones: function(callback) {
+    this.milestones = null;
+    upvote.repo.milestones.fetch().then(function(obj) {
+      this.milestones = new Collection(obj.items);
+      callback && callback();
+    }.bind(this));
+  },
+
+  createMilestone: function(options, callback) {
+    upvote.repo.milestones.create(options).then(function(obj) {
+      this.fetchMilestones(function() {
+        callback && callback(obj);
+      });
     }.bind(this));
   }
 
@@ -170,6 +187,53 @@ var IssueModel = Model.extend({
     return Model.apply(this, arguments);
   },
 
+  toggleFlag: function(name, value, callback) {
+    var rex = /\n\[\]\(file\:\/\/upvoter\.flag\?[^)]*\)/g;
+    var matches = this.body.match(rex);
+    var flags = {};
+    if (matches) {
+      this.body = this.body.replace(rex, "");
+      var match = matches[0];
+      var rawFlags = match.replace(/\n\[\]\(file\:\/\/upvoter\.flag\?/g, "").slice(0,-1);
+      var rawPairs = rawFlags.split("&");
+      rawPairs.forEach(function(rawPair) {
+        var parts = rawPair.split("=");
+        if (!parts[0]) return;
+        flags[parts[0]] = parts[1];
+      });
+    }
+    if (!value) {
+      delete flags[name];
+    } else {
+      flags[name] = value;
+    }
+    var rawFlags = [];
+    for (var k in flags) {
+      rawFlags.push(k + "=" + flags[k]);
+    }
+    var pattern = "\n[](file://upvoter.flag?"+rawFlags.join("&")+")";
+    this.body += pattern;
+    upvote.repo.issues(this.number).update({ body: this.body }).then(function() {
+      callback && callback(flags);
+    });
+  },
+
+  flags$get: function() {
+    var rex = /\[\]\(file\:\/\/upvoter\.flag\?[^)]*\)/g;
+    var matches = this.attributes.body.match(rex);
+    var flags = {};
+    if (matches) {
+      var match = matches[0];
+      var rawFlags = match.replace(/\[\]\(file\:\/\/upvoter\.flag\?/g, "").slice(0,-1);
+      var rawPairs = rawFlags.split("&");
+      rawPairs.forEach(function(rawPair) {
+        var parts = rawPair.split("=");
+        flags[parts[0]] = parts[1];
+      });
+    }
+    return flags;
+  },
+
   fetchReferencingComments: function(callback) {
     var rex = new RegExp("(\\#"+this.parentIssue.number+"(\\W|$))|"+this.parentIssue.htmlUrl);
     upvote.repo.issues(this.number).comments.fetch().then(function(obj) {
@@ -218,12 +282,13 @@ var IssueModel = Model.extend({
     }.bind(this));
   },
 
-  publish: function() {
-    this.publishing = true;
-    upvote.wrapper.showLoading = true;
+  publish: function(callback) {
     this.fetchPollIssues(function() {
 
-      var table = [["Issue #", "Issue title", "Positive votes", "+1", "-1"]];
+      var table = [
+        ["Issue", "Title", "Votes", "+1", "-1"],
+        [":----", ":----", ":----:", ":----:", ":----:"]
+      ];
       this.pollIssues.order().filter(function(pollIssue) {
         if (pollIssue.state !== "open") return;
         if (!pollIssue.referenceComment) return;
@@ -243,8 +308,6 @@ var IssueModel = Model.extend({
       var markdown = `### Poll Results - ${this.title}\n\n`;
       table.forEach(function(row, index) {
         var rowString = "| " + row.join(" | ") + " |\n";
-        if (index !== 0) return markdown += rowString;
-        rowString += "| " + (new Array(row.length)).join("----|----") + " |\n";
         return markdown += rowString;
       });
 
@@ -257,23 +320,67 @@ var IssueModel = Model.extend({
           upvote.repo.issues.comments(resultsComments[0].id).update({
             body: markdown + "\n[](file://upvoter.flag?results=1)\n"
           }).then(function() {
-            window.open(this.htmlUrl);
-            upvote.wrapper.showLoading = false;
-            this.publishing = false;
+            callback && callback(resultsComments[0]);
           }.bind(this));
           return;
         }
 
         upvote.repo.issues(this.number).comments.create({
           body: markdown + "\n[](file://upvoter.flag?results=1)\n"
-        }).then(function() {
-          window.open(this.htmlUrl);
-          upvote.wrapper.showLoading = false;
-          this.publishing = false;
+        }).then(function(obj) {
+          callback && callback(obj);
         }.bind(this));
 
       }.bind(this));
 
+    }.bind(this));
+  },
+
+  milestone: function(callback) {
+    var existingMilestoneNumber = parseInt(this.flags.milestone) || -1;
+    var complete = function(milestone) {
+      this.toggleFlag("milestone", milestone.number, function() {
+          this.attachPollIssuesToMilestone(milestone, callback);
+      }.bind(this));
+    }.bind(this);
+    upvote.model.fetchMilestones(function() {
+      var milestone = upvote.model.milestones && (upvote.model.milestones.find(function(milestone) {
+        return milestone.number === existingMilestoneNumber;
+      }.bind(this)) || upvote.model.milestones.find(function(milestone) {
+        return milestone.title === this.title;
+      }.bind(this))); 
+      if (!milestone) {
+        upvote.model.createMilestone({
+          title: this.title,
+          description: `Create from poll: ${this.title} #${this.number}`
+        }, function(milestone) {
+          complete(milestone);
+        });
+        return;
+      }
+      complete(milestone);
+    }.bind(this));
+  },
+
+  attachPollIssuesToMilestone: function(milestone, callback) {
+    var count = 0;
+    var done = function() {
+      count++;
+      if (count !== this.pollIssues.length) return;
+      callback && callback(milestone);
+    }.bind(this);
+    this.fetchPollIssues(function() {
+      this.pollIssues.forEach(function(issue) {
+        if (issue.state !== "open") {
+          done();
+          return;
+        }
+        upvote.repo.issues(issue.number).update({
+          milestone: milestone.number
+        }).then(function() {
+          done();
+        }.bind(this));
+      }.bind(this));
     }.bind(this));
   },
 
@@ -376,17 +483,17 @@ var CommentModel = Model.extend({
       rawPairs.forEach(function(rawPair) {
         var parts = rawPair.split("=");
         if (!parts[0]) return;
-        flags[parts[0]] = true;
+        flags[parts[0]] = parts[1];
       });
     }
     if (!value) {
       delete flags[name];
     } else {
-      flags[name] = true;
+      flags[name] = value;
     }
     var rawFlags = [];
     for (var k in flags) {
-      rawFlags.push(k + "=" + "1");
+      rawFlags.push(k + "=" + flags[k]);
     }
     var pattern = "\n[](file://upvoter.flag?"+rawFlags.join("&")+")";
     this.body += pattern;
@@ -584,7 +691,7 @@ var LoginView = View.extend({
         <label>Password</label>
         <input id="password" autocomplete="current-password" type="password" onchange="this.view.model.password = this.value" />
       </div>
-      <button class="btn" onclick="this.view.onClick();">Login</button>
+      <button class="btn" onclick="this.view.onClick();">Log in</button>
       <div class="sso">
         <div class="inner">
         Or try single sign-on through <a href="https://github.com/login/oauth/authorize?client_id=${upvote.client_id}&scope=public_repo,write:discussion">GitHub</a>?
@@ -622,7 +729,7 @@ var NavigationView = View.extend({
   </ul>
   ${
     name!=="#login" ?
-    `<button id="logout" onclick="upvote.logout();">Logout</button>` :
+    `<button id="logout" onclick="upvote.logout();">Log out</button>` :
     ``
   }
 </div>
@@ -724,13 +831,21 @@ var PollsItemView = View.extend({
   },
 
   onPublish: function(event) {
+    this.model.disable = true;
     event.stopPropagation();
-    this.model.publish();
+    this.model.publish(function(comment) {
+      this.model.disable = false;
+      window.open(comment.htmlUrl);
+    }.bind(this));
   },
 
   onMilestone: function(event) {
+    this.model.disable = true;
     event.stopPropagation();
-    //this.model.publish();
+    this.model.milestone(function(milestone) {
+      this.model.disable = false;
+      window.open(milestone.htmlUrl);
+    }.bind(this));
   },
 
   template: function() {
@@ -739,11 +854,11 @@ var PollsItemView = View.extend({
   <div class="inner">
     <div class="menubar">
       <div class="padding"></div>
-      <button class="vote menu-btn" onclick="this.view.onClick(event);">${emoji['ballot_box_with_check']} Vote on issues</button>
+      <button ${this.model.disable?"disabled":""} class="vote menu-btn" onclick="this.view.onClick(event);">${emoji['ballot_box_with_check']} Vote on issues</button>
       ${this.model&&this.model.isAssignee?
         `
-        <button ${this.model.publishing?"disabled":""} class="publish menu-btn" onclick="this.view.onPublish(event);"> ${emoji['speech_balloon']} Publish results</button>
-        <button ${this.model.milestoning?"disabled":""} class="milestone menu-btn" onclick="this.view.onMilestone(event);"> ${svg['milestone']} Make milestone</button>
+        <button ${this.model.disable?"disabled":""}  class="publish menu-btn" onclick="this.view.onPublish(event);"> ${emoji['speech_balloon']} Publish results</button>
+        <button ${this.model.disable?"disabled":""}  class="milestone menu-btn" onclick="this.view.onMilestone(event);"> ${svg['milestone']} Publish milestone</button>
         `:
         ``
       }
@@ -757,7 +872,13 @@ var PollsItemView = View.extend({
             <span class="avatar">
               <img src="${this.model.user.avatarUrl}" />
             </span>
-            <span class="readline">${this.model.user.login} created this poll.</span>
+            <span class="readline">${this.model.user.login} opened this issue ${moment(this.model.createdAt).fromNow()}</span>
+          </div>
+          <div  class="labels">
+            ${each(this.model.labels, (label)=>{
+              if (label.name === upvote.tag_name) return ``;
+              return `<span class="label" style="background-color:#${label.color};color:${invertColor(label.color, true)};">${label.name}</span>`;
+            })}
           </div>
         </div>
       </div>
@@ -805,27 +926,33 @@ var PollItemView = View.extend({
     this.model.parentIssue = upvote.model.poll;
   },
 
-  onUpVote: function() {
+  onUpVote: function(event) {
+    this.model.disable = true;
     var referenceComment = this.model.referenceComment;
     referenceComment &&
     referenceComment.toggleReaction("+1", !referenceComment.hasVoted("+1"), function() {
+      this.model.disable = false;
       this.render();
     }.bind(this));
   },
 
   onDownVote: function() {
+    this.model.disable = true;
     var referenceComment = this.model.referenceComment;
     referenceComment &&
     referenceComment.toggleReaction("-1", !referenceComment.hasVoted("-1"), function() {
+      this.model.disable = false;
       this.render();
     }.bind(this));
   },
 
   onInclude: function() {
+    this.model.disable = true;
     var referenceComment = this.model.referenceComment;
     referenceComment &&
     referenceComment.toggleFlag("accept", !this.model.referenceComment.flags.accept, function() {
       this.model.fetchReferencingComments(function() {
+        this.model.disable = false;
         this.render();
       }.bind(this));
     }.bind(this));
@@ -838,10 +965,10 @@ var PollItemView = View.extend({
   <div class="inner">
     <div class="menubar">
       <div class="padding"></div>
-      <button class="up menu-btn ${this.model.referenceComment.hasVoted("+1")?"voted":""}" tooltip="${this.model.referenceComment.hasVoted("+1")?"Voted +1.":"Not voted +1."}" onclick="this.view.onUpVote(event);"> ${emoji['+1']} ${or(this.model.referenceComment.reactions['+1'], 0)}</button>
-      <button class="down menu-btn ${this.model.referenceComment.hasVoted("-1")?"voted":""}" tooltip="${this.model.referenceComment.hasVoted("-1")?"Voted -1.":"Not voted -1."}"  onclick="this.view.onDownVote(event);"> ${emoji['-1']} ${or(this.model.referenceComment.reactions['1'], 0)}</button>
+      <button ${this.model.disable?"disabled":""} class="up menu-btn ${this.model.referenceComment.hasVoted("+1")?"voted":""}" tooltip="${this.model.referenceComment.hasVoted("+1")?"Voted +1.":"Not voted +1."}" onclick="this.view.onUpVote(event);"> ${emoji['+1']} ${or(this.model.referenceComment.reactions['+1'], 0)}</button>
+      <button ${this.model.disable?"disabled":""} class="down menu-btn ${this.model.referenceComment.hasVoted("-1")?"voted":""}" tooltip="${this.model.referenceComment.hasVoted("-1")?"Voted -1.":"Not voted -1."}"  onclick="this.view.onDownVote(event);"> ${emoji['-1']} ${or(this.model.referenceComment.reactions['1'], 0)}</button>
       ${this.model.parentIssue&&this.model.parentIssue.isAssignee?
-      `<button class="include menu-btn emoji" onclick="this.view.onInclude(event);"> ${this.model.referenceComment.flags.accept?emoji['heavy_check_mark']:emoji['x']}${this.model.referenceComment.flags.accept?" Accepted":" Not accepted"}</button>`:
+      `<button ${this.model.disable?"disabled":""} class="include menu-btn emoji" onclick="this.view.onInclude(event);"> ${this.model.referenceComment.flags.accept?emoji['heavy_check_mark']:emoji['x']}${this.model.referenceComment.flags.accept?" Accepted":" Not accepted"}</button>`:
       ``
       }
     </div>
@@ -854,7 +981,13 @@ var PollItemView = View.extend({
             <span class="avatar">
               <img src="${this.model.user.avatarUrl}" />
             </span>
-            <span class="readline">${this.model.user.login} created this issue. </span>
+            <span class="readline">${this.model.user.login} opened this issue ${moment(this.model.createdAt).fromNow()}</span>
+          </div>
+          <div  class="labels">
+            ${each(this.model.labels, (label)=>{
+              //if (label.name === upvote.tag_name) return ``;
+              return `<span class="label" style="background-color:#${label.color};color:${invertColor(label.color, true)};">${label.name}</span>`;
+            })}
           </div>
         </div>
       </div>
