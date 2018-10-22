@@ -1017,7 +1017,7 @@ var PollsItemView = View.extend({
           </div>
           <div  class="labels">
             ${each(this.model.labels, (label)=>{
-              if (label.name === upvote.tag_name) return ``;
+              if (label.name === upvote.model.repo.tag_name) return ``;
               return `<span class="label" style="background-color:#${label.color};color:${invertColor(label.color, true)};">${label.name}</span>`;
             })}
           </div>
