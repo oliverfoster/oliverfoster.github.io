@@ -12,9 +12,9 @@ var Upvote = Class.extend({
   user_name: "oliverfoster",
   repo_name: "adapt-process-recommendations",
   tag_name: "poll",
-  // user_name: "adaptlearning",
-  // repo_name: "adapt_framework",
-  // tag_name: "enhancement",
+  user_name: "adaptlearning",
+  repo_name: "adapt_framework",
+  tag_name: "enhancement",
 
   client_id: "ff5cf9bb34c83b06f2fb",
 
