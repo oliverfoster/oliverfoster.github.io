@@ -348,7 +348,7 @@ var IssueModel = Model.extend({
         return milestone.number === existingMilestoneNumber;
       }.bind(this)) || upvote.model.milestones.find(function(milestone) {
         return milestone.title === this.title;
-      }.bind(this))); 
+      }.bind(this)));
       if (!milestone) {
         upvote.model.createMilestone({
           title: this.title,
@@ -371,10 +371,9 @@ var IssueModel = Model.extend({
     }.bind(this);
     this.fetchPollIssues(function() {
       this.pollIssues.forEach(function(issue) {
-        if (issue.state !== "open") {
-          done();
-          return;
-        }
+        if (issue.state !== "open") return done();
+        if (!issue.referenceComment) return done();
+        if (!issue.referenceComment.flags.accept) return done();
         upvote.repo.issues(issue.number).update({
           milestone: milestone.number
         }).then(function() {
