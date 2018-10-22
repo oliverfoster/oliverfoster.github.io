@@ -27,8 +27,8 @@ var Templates = List.extend({
       if (!existing) continue;
       existing.attach && existing.attach();
       if (existing.el === seat) continue;
-      replaceWith(seat, existing.el);
-      existing.render();
+      rafer.call(replaceWith, null, seat, existing.el);
+      rafer.call(existing, "render");
     }
   }
 

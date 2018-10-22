@@ -269,7 +269,6 @@ button {
 .tile {
   display: block;
   overflow: hidden;
-  min-height: 150px;
   border: 1px solid #e1e4e8;
   border-radius: 3px;
   margin: auto;
@@ -316,6 +315,23 @@ button {
 .tile .title a {
   color:  #24292e;
   text-decoration: none;
+}
+
+.repos-item .title,
+.repos-item .title a {
+  font-size: 0.9em;
+  color: #0366d6;
+  font-weight: 400;
+}
+
+.repos-item .title,
+.repos-item .avatar {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.repos-item .header {
+  padding: 5px 10px 5px;
 }
 
 .tile .title h1 {

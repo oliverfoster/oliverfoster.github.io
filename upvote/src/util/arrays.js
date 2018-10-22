@@ -13,3 +13,9 @@ var find = function(obj, callback) {
   }
   return null;
 };
+
+var difference = function(a, b) {
+  return a.filter(function(a1) {
+    return !b.find(a1);
+  });
+};

@@ -1,10 +1,11 @@
 var View = Class.extend({
 
   id: "",
+  cid: "",
   tagName: "div",
 
   constructor: function View(options) {
-    bindAll(this, "_produce");
+    this.cid = ++View.ids;
     Object.defineProperty(this, "_model", {
       value: null,
       writable: true,
@@ -60,21 +61,18 @@ var View = Class.extend({
 
   render: function() {
     if (!this.el) return;
-    rafer.request(this._produce);
-  },
-
-  _produce: function() {
     typeof this.preRender === "function" && this.preRender();
     this.trigger("preRender");
     templates.in(this);
     this.el.view = this;
     var templateString = this.template.call(this);
     vode.updateOuterHTML(this.el, templateString, {
-      injectRootAttributes: { view: '' },
+      injectRootAttributes: { view: this.cid },
       ignoreSubTreesWithAttributes: ['view']
     });
     this.seat = this.el.cloneNode().outerHTML;
-    elements("[onchange],[onclick]", this.el).forEach(function(element) {
+    var eventSelector = "[onchange], [onclick]";
+    elements(this.el).differenceQuery(eventSelector, elements(this.el).query("[view]").query(eventSelector)).forEach(function(element) {
       element.view = this;
     }.bind(this));
     templates.out(this);

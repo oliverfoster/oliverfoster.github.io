@@ -2,24 +2,38 @@ var converter = new showdown.Converter();
 
 var Upvote = Class.extend({
 
+  defaultRoute: "#repos",
+
   router: null,
+
   octo: null,
   repo: null,
   user: null,
 
   acceptHeader: "application/vnd.github.mockingbird-preview, application/vnd.github.squirrel-girl-preview+json, application/vnd.github.echo-preview+json",
 
-  user_name: "oliverfoster",
-  repo_name: "adapt-process-recommendations",
-  tag_name: "poll",
-  user_name: "adaptlearning",
-  repo_name: "adapt_framework",
-  tag_name: "enhancement",
+  repos: [
+    {
+      user_name: "oliverfoster",
+      repo_name: "adapt-process-recommendations",
+      tag_name: "poll"
+    },
+    {
+      user_name: "adaptlearning",
+      repo_name: "adapt_framework",
+      tag_name: "poll"
+    },
+    {
+      user_name: "adaptlearning",
+      repo_name: "adapt_authoring",
+      tag_name: "poll"
+    }
+  ],
 
   client_id: "ff5cf9bb34c83b06f2fb",
 
   constructor: function Upvote(options) {
-    this.model = new RepoModel();
+    this.model = new AppModel();
     this.router = new Router();
     this.wrapper = new WrapperView({
       el: options.el,
@@ -67,12 +81,14 @@ var Upvote = Class.extend({
         return;
       }
       if (!this.model.poll && id || this.model.poll.number !== id) {
-        this.model.poll = this.model.polls.find(function(poll) {
+        this.model.poll = this.model.repo.polls.find(function(poll) {
           return poll.number == id;
         });
       }
     }
+    delay(function() {
     this.wrapper.render();
+  }.bind(this), 10);
   },
 
   login: function(options) {
@@ -88,7 +104,7 @@ var Upvote = Class.extend({
     }.bind(this));
     this.navigateTo = this.router.startHash;
     if (this.navigateTo === "#login") this.navigateTo = "";
-    this.router.replace("#polls");
+    this.router.replace(upvote.defaultRoute);
   },
 
   logout: function() {
@@ -101,6 +117,47 @@ var Upvote = Class.extend({
   instanceEvents: true
 });
 
+var AppModel = Model.extend({
+
+  constructor: function AppModel() {
+    return Model.apply(this, arguments);
+  },
+
+  fetchRepos: function(callback) {
+    this.repos = new ReposCollection();
+    upvote.repos.forEach(function (repoConfig) {
+      upvote.octo.repos(repoConfig.user_name, repoConfig.repo_name).fetch().then(function(obj) {
+        obj.repo_name = repoConfig.repo_name;
+        obj.user_name = repoConfig.user_name;
+        obj.tag_name = repoConfig.tag_name;
+        this.repos.push(obj);
+        if (this.repos.length !== upvote.repos.length) return;
+        this.repos.sort(function(a,b) {
+          var value = a.user_name.localeCompare(b.user_name);
+          if (!value) value = a.repo_name.localeCompare(b.repo_name);
+          return value;
+        })
+        callback && callback();
+      }.bind(this));
+    }.bind(this));
+  }
+
+});
+
+var ReposCollection = Collection.extend({
+
+  constructor: function ReposCollection(data, options) {
+    return Collection.call(this, data, {
+      child: function(value) {
+        if (value instanceof Array) return new ReposCollection(value, options);
+        return new RepoModel(value, options);
+      }
+    });
+  }
+
+});
+
+
 var RepoModel = Model.extend({
 
   constructor: function RepoModel() {
@@ -109,26 +166,26 @@ var RepoModel = Model.extend({
 
   fetchPolls: function(callback) {
     this.polls = null;
-    upvote.repo.issues.fetch({state:"open", labels: upvote.tag_name}).then(function(obj) {
+    upvote.model.repo.issues.fetch({state:"open", labels: upvote.model.repo.tag_name}).then(function(obj) {
       this.polls = new IssueCollection(obj.items);
-      if (upvote.navigateTo) {
-        upvote.router.replace(upvote.navigateTo);
-        upvote.navigateTo = null;
-      }
+      // if (upvote.navigateTo) {
+      //   upvote.router.replace(upvote.navigateTo);
+      //   upvote.navigateTo = null;
+      // }
       callback && callback();
     }.bind(this));
   },
 
   fetchMilestones: function(callback) {
     this.milestones = null;
-    upvote.repo.milestones.fetch().then(function(obj) {
+    upvote.model.repo.milestones.fetch().then(function(obj) {
       this.milestones = new Collection(obj.items);
       callback && callback();
     }.bind(this));
   },
 
   createMilestone: function(options, callback) {
-    upvote.repo.milestones.create(options).then(function(obj) {
+    upvote.model.repo.milestones.create(options).then(function(obj) {
       this.fetchMilestones(function() {
         callback && callback(obj);
       });
@@ -213,7 +270,7 @@ var IssueModel = Model.extend({
     }
     var pattern = "\n[](file://upvoter.flag?"+rawFlags.join("&")+")";
     this.body += pattern;
-    upvote.repo.issues(this.number).update({ body: this.body }).then(function() {
+    upvote.model.repo.issues(this.number).update({ body: this.body }).then(function() {
       callback && callback(flags);
     });
   },
@@ -236,7 +293,7 @@ var IssueModel = Model.extend({
 
   fetchReferencingComments: function(callback) {
     var rex = new RegExp("(\\#"+this.parentIssue.number+"(\\W|$))|"+this.parentIssue.htmlUrl);
-    upvote.repo.issues(this.number).comments.fetch().then(function(obj) {
+    upvote.model.repo.issues(this.number).comments.fetch().then(function(obj) {
       this.referenceCommentItems = new CommentCollection(obj.items, { issueNumber: this.number });
       var done = 0;
       this.referenceCommentItems.forEach(function(comment) {
@@ -276,7 +333,7 @@ var IssueModel = Model.extend({
   },
 
   fetchComments: function(callback) {
-    upvote.repo.issues(this.number).comments.fetch().then(function(obj) {
+    upvote.model.repo.issues(this.number).comments.fetch().then(function(obj) {
       this.commentItems = new CommentCollection(obj.items, { issueNumber: this.number });
       callback && callback();
     }.bind(this));
@@ -317,7 +374,7 @@ var IssueModel = Model.extend({
         }).reverse();
 
         if (resultsComments.length) {
-          upvote.repo.issues.comments(resultsComments[0].id).update({
+          upvote.model.repo.issues.comments(resultsComments[0].id).update({
             body: markdown + "\n[](file://upvoter.flag?results=1)\n"
           }).then(function() {
             callback && callback(resultsComments[0]);
@@ -325,7 +382,7 @@ var IssueModel = Model.extend({
           return;
         }
 
-        upvote.repo.issues(this.number).comments.create({
+        upvote.model.repo.issues(this.number).comments.create({
           body: markdown + "\n[](file://upvoter.flag?results=1)\n"
         }).then(function(obj) {
           callback && callback(obj);
@@ -374,7 +431,7 @@ var IssueModel = Model.extend({
         if (issue.state !== "open") return done();
         if (!issue.referenceComment) return done();
         if (!issue.referenceComment.flags.accept) return done();
-        upvote.repo.issues(issue.number).update({
+        upvote.model.repo.issues(issue.number).update({
           milestone: milestone.number
         }).then(function() {
           done();
@@ -385,8 +442,8 @@ var IssueModel = Model.extend({
 
   fetchPollIssues: function(callback) {
     this.pollIssues = null;
-    var rex = new RegExp(`https\:\/\/github\.com\/${upvote.user_name}\/`);
-    upvote.repo.issues(this.number).timeline.fetch().then(function(obj) {
+    var rex = new RegExp(`https\:\/\/github\.com\/${upvote.model.repo.user_name}\/`);
+    upvote.model.repo.issues(this.number).timeline.fetch().then(function(obj) {
       var events = obj.items.filter(function(item) {
         var isCrossReferencedIssue = (item.event === "cross-referenced" &&
           item.source.type === "issue");
@@ -442,7 +499,7 @@ var CommentModel = Model.extend({
   },
 
   update: function(callback) {
-    upvote.repo.issues.comments(this.id).fetch().then(function(data) {
+    upvote.model.repo.issues.comments(this.id).fetch().then(function(data) {
       for (var k in this.attributes) {
         if (!data[k]) continue;
         this[k] = data[k];
@@ -458,7 +515,7 @@ var CommentModel = Model.extend({
       this.update(callback);
     }.bind(this);
     if (value) {
-      upvote.repo.issues.comments(this.id).reactions.create({
+      upvote.model.repo.issues.comments(this.id).reactions.create({
         content: name
       }).then(complete);
     } else {
@@ -496,7 +553,7 @@ var CommentModel = Model.extend({
     }
     var pattern = "\n[](file://upvoter.flag?"+rawFlags.join("&")+")";
     this.body += pattern;
-    upvote.repo.issues.comments(this.id).update({ body: this.body }).then(function() {
+    upvote.model.repo.issues.comments(this.id).update({ body: this.body }).then(function() {
       callback && callback(flags);
     });
   },
@@ -539,7 +596,7 @@ var CommentModel = Model.extend({
   },
 
   fetchReactions: function(callback) {
-    upvote.repo.issues.comments(this.id).reactions.fetch().then(function(obj) {
+    upvote.model.repo.issues.comments(this.id).reactions.fetch().then(function(obj) {
       this.reactionItems = obj.items;
       callback && callback(this.reactionItems);
     }.bind(this));
@@ -550,6 +607,8 @@ var CommentModel = Model.extend({
 var WrapperView = View.extend({
 
   id: "wrapper",
+
+  initialize: function() {},
 
   showLoading$set: function(value) {
     //this.model.showLoading = value;
@@ -563,7 +622,11 @@ var WrapperView = View.extend({
     return `
 <div id="${this.id}" class="${className}">
   ${seat({ class: NavigationView, id: "content-navigation" })}
-  ${seat({ class: ContentTitleView, id: "content-title" })}
+  ${
+    name=== "#repos" || name === "#polls" || name === "#poll" ?
+    seat({ class: ContentTitleView, id: "content-title" }) :
+    ``
+  }
   ${
     name === "#poll" ?
     seat({ class: ContentBodyView, id: "content-body" }) :
@@ -573,8 +636,10 @@ var WrapperView = View.extend({
     ${
       name === "#login" ?
       seat({ class: LoginView, id: "login" }) :
+      name === "#repos" ?
+      seat({ class: ReposView, model: this.model, id: "repos" }) :
       name === "#polls" ?
-      seat({ class: PollsView, model: this.model, id: "polls" }) :
+      seat({ class: PollsView, model: this.model.repo, id: "polls" }) :
       name === "#poll" ?
       seat({ class: PollView, model: this.model.poll, id: "poll" }) :
       ""
@@ -715,10 +780,12 @@ var NavigationView = View.extend({
 <div id="${this.id}" class="content-navigation">
   <img class="logo logo-light" alt="Adapt Learning" src="https://www.adaptlearning.org/wp-content/uploads/2016/01/nav_logo_white-alt-2-1.png">
   <ul>
-    <li>Adapt Democracy </li>
+    <li><a href="#repos">Adapt Democracy </a></li>
   ${
     name==="#login" ?
     `<li>Login with GitHub</li>` :
+    name==="#repos" ?
+    `` :
     name==="#polls" ?
     `<li>Open polls</li>` :
     name==="#poll" ?
@@ -746,9 +813,17 @@ var ContentTitleView = View.extend({
     return `
 <div id="${this.id}" class="content-title">
   <div class="inner">
-    <div>
-      ${svg.repo}<a class="username" href="https://github.com/${upvote.user_name}" target="_blank"> ${upvote.user_name} </a> / <a class="repo" href="https://github.com/${upvote.user_name}/${upvote.repo_name}" target="_blank"> ${upvote.repo_name} </a>
-    </div>
+  ${
+    name==="#repos" ?
+    `<div>
+      ${svg.repo}<a class="available" href="#repos"> Repositories </a>
+    </div>` :
+    name==="#polls" || name==="#poll" ?
+    `<div>
+      ${svg.repo}<a class="available" href="#repos"> Repositories </a> / <a class="username" href="https://github.com/${upvote.model.repo.user_name}" target="_blank"> ${upvote.model.repo.user_name} </a> / <a class="repo" href="https://github.com/${upvote.model.repo.repo_name}/${upvote.model.repo.repo_name}" target="_blank"> ${upvote.model.repo.repo_name} </a>
+    </div>` :
+    ``
+  }
   ${
     name==="#polls"?
     `<div>
@@ -779,6 +854,8 @@ var ContentBodyView = View.extend({
     switch (name) {
       case "#login":
         return ``;
+      case "#repos":
+        return ``;
       case "#polls":
         return ``;
       case "#poll":
@@ -794,11 +871,76 @@ var ContentBodyView = View.extend({
 
 });
 
+var ReposView = View.extend({
+
+  attach: function() {
+    this.clear();
+    this.model.fetchRepos(function() {
+      this.render();
+    }.bind(this));
+  },
+
+  template: function() {
+    return `
+<div id="${this.id}" class="content-outer">
+  ${each(this.model.repos, (item, index)=>{
+    return seat({ class: ReposItemView, model: item, id: "item-"+index });
+  }, (items)=>{
+    if (!items) {
+      return '<div class="loading">Loading...</div>';
+    }
+    return '<div class="empty">No open repos found.</div>';
+  })}
+</div>
+`;
+  }
+
+});
+
+var ReposItemView = View.extend({
+
+  onClick: function(event) {
+    upvote.model.repo = this.model;
+    upvote.router.push("#polls");
+  },
+
+  onLink: function(event) {
+    event.stopPropagation();
+  },
+
+  template: function() {
+    return `
+<div id="${this.id}" class="repos-item tile">
+  <div class="inner">
+    <div class="menubar">
+      <div class="padding"></div>
+      <button ${this.model.disable?"disabled":""} class="vote menu-btn" onclick="this.view.onClick(event);">${emoji['ballot_box_with_check']} See open polls</button>
+    </div>
+    <div class="content">
+      <div class="header">
+        <div class="text">
+          <span class="avatar">
+            <img src="${this.model.owner.avatarUrl}" />
+          </span>
+          <div class="title"><h1><a target="_blank" href="${this.model.owner.htmlUrl}" onclick="this.view.onLink(event);">${this.model.user_name}</a> / <a target="_blank" href="${this.model.htmlUrl}" onclick="this.view.onLink(event);">${this.model.repo_name}</a></h1></div>
+        </div>
+      </div>
+      <div class="body markdown">${converter.makeHtml(this.model.description)}</div>
+    </div>
+  </div>
+</div>
+`;
+  }
+
+});
+
 var PollsView = View.extend({
 
   attach: function() {
     this.clear();
-    this.model.fetchPolls();
+    this.model.fetchPolls(function() {
+      this.render();
+    }.bind(this));
   },
 
   template: function() {
@@ -865,7 +1007,7 @@ var PollsItemView = View.extend({
     <div class="content">
       <div class="header">
         <div class="text">
-          <div class="title"><h1>${this.model.title}<a target="_blank" href="${this.model.htmlUrl}" onclick="this.view.onLink(event);"> <span class="issue-number">#${this.model.number}</span></h1></a></div>
+          <div class="title"><h1><a target="_blank" href="${this.model.htmlUrl}" onclick="this.view.onLink(event);">${this.model.title} <span class="issue-number">#${this.model.number}</span></h1></a></div>
           <div class="subtitle">
             <span class="state ${this.model.state}">${this.model.state === "closed" ? svg.closed + " Closed" : svg.open + " Open" }</span>
             <span class="avatar">
@@ -896,7 +1038,6 @@ var PollsItemView = View.extend({
 var PollView = View.extend({
 
   attach: function() {
-    this.clear();
     this.model.fetchPollIssues(function() {
       this.render();
     }.bind(this));
@@ -974,7 +1115,7 @@ var PollItemView = View.extend({
     <div class="content">
       <div class="header">
         <div class="text">
-          <div class="title"><h1>${this.model.title} <a href="${this.model.referenceComment.htmlUrl}" target="_blank"><span class="issue-number">#${this.model.number}</span></a></h1></div>
+          <div class="title"><h1><a href="${this.model.referenceComment.htmlUrl}" target="_blank">${this.model.title} <span class="issue-number">#${this.model.number}</span></a></h1></div>
           <div class="subtitle">
             <span class="state ${this.model.state}">${this.model.state === "closed" ? svg.closed + " Closed" : svg.open + " Open" }</span>
             <span class="avatar">
@@ -984,7 +1125,6 @@ var PollItemView = View.extend({
           </div>
           <div  class="labels">
             ${each(this.model.labels, (label)=>{
-              //if (label.name === upvote.tag_name) return ``;
               return `<span class="label" style="background-color:#${label.color};color:${invertColor(label.color, true)};">${label.name}</span>`;
             })}
           </div>
