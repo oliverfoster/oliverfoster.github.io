@@ -104,7 +104,7 @@ var Upvote = Class.extend({
     }.bind(this));
     this.navigateTo = this.router.startHash;
     if (this.navigateTo === "#login") this.navigateTo = "";
-    this.router.replace(upvote.defaultRoute);
+    this.router.replace(this.defaultRoute);
   },
 
   logout: function() {
