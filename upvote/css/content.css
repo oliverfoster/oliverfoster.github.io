@@ -39,22 +39,22 @@
 
 }
 
-.content-title svg {
+.content-title .location svg {
   fill: #959da5;
   margin-right: 6px;
   vertical-align: bottom;
 }
 
-.content-title a {
+.content-title .location a {
   color: #0366d6;
   text-decoration: none;
 }
 
-.content-title a:last-child {
+.content-title .location a:last-child {
   font-weight: 600;
 }
 
-.content-title .inner .location {
+.content-title .location {
   color: #0366d6;
   padding: 12px 0;
   font-size: 1.1em;
