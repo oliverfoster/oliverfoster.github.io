@@ -1,6 +1,11 @@
 var PollView = View.extend({
 
+  renderOnChange: false,
+
+  initialize: function() {},
+
   attach: function() {
+    this.clear();
     this.model.fetchPollIssues(function() {
       this.render();
     }.bind(this));

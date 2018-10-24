@@ -27,9 +27,13 @@ var PollsItemView = View.extend({
     }.bind(this));
   },
 
+  permahash: function() {
+    return `polls&path=${upvote.model.repo.path}&number=${this.model.number}`;
+  },
+
   template: function() {
     return `
-<div id="${this.id}" class="polls-item tile">
+<div id="${this.id}" class="polls-item tile" link="perm${sha256(this.permahash())}">
   <div class="inner">
     <div class="menubar">
       <div class="padding"></div>
@@ -45,7 +49,7 @@ var PollsItemView = View.extend({
     <div class="content">
       <div class="header">
         <div class="text">
-          <div class="title"><h1><a target="_blank" href="${this.model.htmlUrl}" onclick="this.view.onLink(event);">${this.model.title} <span class="issue-number">#${this.model.number}</span></h1></a></div>
+          <div class="title"><h1><a href="#${this.permahash()}" onclick="this.view.onLink(event);">${this.model.title} <span class="issue-number">#${this.model.number}</span></h1></a></div>
           <div class="subtitle">
             <span class="state ${this.model.state}">${this.model.state === "closed" ? svg.closed + " Closed" : svg.open + " Open" }</span>
             <span class="avatar">

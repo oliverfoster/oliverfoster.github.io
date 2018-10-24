@@ -50,11 +50,11 @@ var Router = Class.extend({
       }
       link.push(k+"="+hash[k]);
     }
-    return `#${link.join("&")}`;
+    return `${link.join("&")}`;
   },
 
   permalink: function(hash) {
-    return `${location.origin}${location.pathname}${this.permahash(hash)}`;
+    return `${location.origin}${location.pathname}#${this.permahash(hash)}`;
   },
 
   hasSearch$get: function() {

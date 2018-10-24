@@ -29,3 +29,9 @@ g-emoji {
   font-weight: 400;
   line-height: 20px;
 }
+
+.linked {
+  border: 1px solid #2188ff;
+  border-radius: 3px;
+  box-shadow: 0 0 0 0.2em #c8e1ff;
+}

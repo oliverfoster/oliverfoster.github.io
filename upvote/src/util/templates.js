@@ -1,6 +1,8 @@
 var Templates = List.extend({
 
-  constructor: function Templates() {},
+  constructor: function Templates() {
+    this.ready = debounce(this.ready, 500);
+  },
 
   in: function(context) {
     this.push(context);
@@ -11,6 +13,8 @@ var Templates = List.extend({
     var oldContext = this.pop();
     if (context !== oldContext) throw "Bad context management";
     this.attachChildren(oldContext);
+    if (this.length) return;
+    this.ready();
   },
 
   children$get$enum: function() {
@@ -30,8 +34,14 @@ var Templates = List.extend({
       rafer.call(replaceWith, null, seat, existing.el);
       rafer.call(existing, "render");
     }
+  },
+
+  ready: function() {
+    this.trigger("ready");
   }
 
+}, null, {
+  instanceEvents: true
 });
 
 var templates = new Templates();
