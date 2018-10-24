@@ -11,7 +11,7 @@ var ContentTitleView = View.extend({
     </div>` :
     hash.polls || hash.poll ?
     `<div class="location">
-      ${svg.repo}<a class="username" href="https://github.com/${upvote.model.repo.user_name}" target="_blank"> ${upvote.model.repo.user_name} </a> / <a class="repo" href="https://github.com/${upvote.model.repo.repo_name}/${upvote.model.repo.repo_name}" target="_blank"> ${upvote.model.repo.repo_name} </a>
+      ${svg.repo}<a class="username" href="https://github.com/${upvote.model.repo.user_name}" target="_blank"> ${upvote.model.repo.user_name} </a> / <a class="repo" href="https://github.com/${upvote.model.repo.user_name}/${upvote.model.repo.repo_name}" target="_blank"> ${upvote.model.repo.repo_name} </a>
     </div>` :
     ``
   }
@@ -49,7 +49,7 @@ var ContentTitleView = View.extend({
           <a class="polls" href="#polls&path=${upvote.model.repo.path}">
             <div class="selector"></div>
             <div class="text">
-              ${svg.insight}Open polls
+              ${svg.project}Open polls
             </div>
           </a>
         </li>
@@ -69,7 +69,7 @@ var ContentTitleView = View.extend({
         <li>
           <a class="polls" href="#polls&path=${upvote.model.repo.path}">
             <div class="text">
-              ${svg.insight}Open polls
+              ${svg.project}Open polls
             </div>
           </a>
         </li>
@@ -77,7 +77,7 @@ var ContentTitleView = View.extend({
           <a class="polls" href="#poll&path=${upvote.model.repo.path}&number=${upvote.model.poll.number}">
             <div class="selector"></div>
             <div class="text">
-              ${svg.insight}Poll issues
+              ${svg.pencil}Vote on issues
             </div>
           </a>
         </li>

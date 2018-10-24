@@ -6,6 +6,10 @@ var AppModel = Model.extend({
 
   fetchRepos: function(callback) {
     this.repos = new RepoCollection();
+    if (!upvote.config || !upvote.config.repos || !upvote.config.repos.length) {
+      callback && callback();
+      return;
+    }
     upvote.config.repos.forEach(function (repoConfig) {
       upvote.octo.repos(repoConfig.user_name, repoConfig.repo_name).fetch().then(function(obj) {
         obj.repo_name = repoConfig.repo_name;

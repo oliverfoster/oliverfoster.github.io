@@ -1,7 +1,7 @@
 var IssueModel = Model.extend({
 
   constructor: function IssueModel(value, options) {
-    this.parentIssue = options && options.parentIssue;
+    this.parentIssue = (options && options.parentIssue) || (value && value.parentIssue);
     return Model.apply(this, arguments);
   },
 
@@ -70,6 +70,38 @@ var IssueModel = Model.extend({
         }.bind(this));
       }.bind(this));
     }.bind(this));
+  },
+
+  addLinkToPoll: function(permalink) {
+    if (!this.isAssignee) return;
+    var linkRex = /\n\n\[Link to poll\]\([^\)]*\)/;
+    var matches = this.body.match(linkRex);
+    if (matches) return;
+    this.body = this.body+`\n\n[Link to poll](${permalink})`
+    upvote.model.repo.issues(this.number).update({
+      body: this.body
+    });
+  },
+
+  acceptState$get$enum: function() {
+    var referenceComment = this.referenceComment;
+    return referenceComment.flags.accept ? "accepted" : "notaccepted";
+  },
+
+  isIssueAssignee$get: function() {
+    return this.parentIssue && this.parentIssue.isAssignee;
+  },
+
+  accepted$get: function() {
+    return this.referenceComment.flags.accept
+  },
+
+  hasVoted: function(reactionName) {
+    return this.referenceComment.hasVoted(reactionName);
+  },
+
+  reactions$get: function() {
+    return this.referenceComment.reactions;
   },
 
   referenceComment$get: function() {
@@ -205,6 +237,10 @@ var IssueModel = Model.extend({
     this.pollIssues = null;
     var rex = new RegExp(`https\:\/\/github\.com\/${upvote.model.repo.user_name}\/`);
     upvote.model.repo.issues(this.number).timeline.fetch().then(function(obj) {
+      if (!obj || !obj.items || !obj.items.length) {
+        callback && callback();
+        return;
+      }
       var events = obj.items.filter(function(item) {
         var isCrossReferencedIssue = (item.event === "cross-referenced" &&
           item.source.type === "issue");

@@ -47,15 +47,15 @@ var PollItemView = View.extend({
 
   template: function() {
     return `
-<div id="${this.id}" class="poll-item tile" link="perm${sha256(this.permahash())}">
+<div id="${this.id}" class="poll-item tile ${this.model.state} ${this.model.acceptState}" link="perm${sha256(this.permahash())}">
   <div class="inner">
     <div class="menubar">
       <div class="padding"></div>
-      <button ${this.model.disable?"disabled":""} class="open menu-btn" onclick="this.view.onOpen(event);">${emoji['thought_balloon']} Comments</button>
-      <button ${this.model.disable?"disabled":""} class="up menu-btn ${this.model.referenceComment.hasVoted("+1")?"voted":""}" tooltip="${this.model.referenceComment.hasVoted("+1")?"Voted +1.":"Not voted +1."}" onclick="this.view.onUpVote(event);"> ${emoji['+1']} ${or(this.model.referenceComment.reactions['+1'], 0)}</button>
-      <button ${this.model.disable?"disabled":""} class="down menu-btn ${this.model.referenceComment.hasVoted("-1")?"voted":""}" tooltip="${this.model.referenceComment.hasVoted("-1")?"Voted -1.":"Not voted -1."}"  onclick="this.view.onDownVote(event);"> ${emoji['-1']} ${or(this.model.referenceComment.reactions['1'], 0)}</button>
-      ${this.model.parentIssue&&this.model.parentIssue.isAssignee?
-      `<button ${this.model.disable?"disabled":""} class="include menu-btn emoji" onclick="this.view.onInclude(event);"> ${this.model.referenceComment.flags.accept?emoji['heavy_check_mark']:emoji['x']}${this.model.referenceComment.flags.accept?" Accepted":" Not accepted"}</button>`:
+      <button ${this.model.disable?"disabled":""} class="open menu-btn" onclick="this.view.onOpen(event);">${svg['comment']} Conversation</button>
+      <button ${this.model.disable?"disabled":""} class="up menu-btn ${this.model.hasVoted("+1")?"voted":""}" tooltip="${this.model.hasVoted("+1")?"Voted +1.":"Not voted +1."}" onclick="this.view.onUpVote(event);"> ${emoji['+1']} ${or(this.model.reactions['+1'], 0)}</button>
+      <button ${this.model.disable?"disabled":""} class="down menu-btn ${this.model.hasVoted("-1")?"voted":""}" tooltip="${this.model.hasVoted("-1")?"Voted -1.":"Not voted -1."}"  onclick="this.view.onDownVote(event);"> ${emoji['-1']} ${or(this.model.reactions['1'], 0)}</button>
+      ${this.model.isIssueAssignee?
+      `<button ${this.model.disable?"disabled":""} class="include menu-btn emoji" onclick="this.view.onInclude(event);"> ${this.model.accepted?emoji['heavy_check_mark']:emoji['x']}${this.model.accepted?" Accepted":" Not accepted"}</button>`:
       ``
       }
     </div>
@@ -78,24 +78,6 @@ var PollItemView = View.extend({
         </div>
       </div>
       <div class="body markdown">${markdown.makeHtml(this.model.body)}</div>
-      <div class="footer">
-        <!--
-        <div class="up">
-          <div class="voters">
-            ${each(this.model.referenceComment.upVotedUsers, (name)=>{
-              return '<div class="username">'+name+'</div>';
-            })}
-          </div>
-        </div>
-        <div class="down">
-          <div class="voters">
-            ${each(this.model.referenceComment.downVotedUsers, (name)=>{
-              return '<div class="username">'+name+'</div>';
-            })}
-          </div>
-        </div>
-        --!>
-      </div>
     </div>
   </div>
 </div>

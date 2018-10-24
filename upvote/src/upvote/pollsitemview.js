@@ -3,6 +3,7 @@ var PollsItemView = View.extend({
   onClick: function(event) {
     upvote.model.poll = this.model;
     upvote.router.push("#poll&path="+upvote.model.repo.user_name+"/"+upvote.model.repo.repo_name+"&number="+this.model.number);
+    this.model.addLinkToPoll(location.origin+location.pathname+"#"+this.permahash(true));
   },
 
   onLink: function(event) {
@@ -27,7 +28,8 @@ var PollsItemView = View.extend({
     }.bind(this));
   },
 
-  permahash: function() {
+  permahash: function(inside) {
+    if (inside) return `poll&path=${upvote.model.repo.path}&number=${this.model.number}`;
     return `polls&path=${upvote.model.repo.path}&number=${this.model.number}`;
   },
 
@@ -37,7 +39,7 @@ var PollsItemView = View.extend({
   <div class="inner">
     <div class="menubar">
       <div class="padding"></div>
-      <button ${this.model.disable?"disabled":""} class="vote menu-btn" onclick="this.view.onClick(event);">${emoji['ballot_box_with_check']} Vote on issues</button>
+      <button ${this.model.disable?"disabled":""} class="vote menu-btn" onclick="this.view.onClick(event);">${svg.pencil} Vote on issues</button>
       ${this.model&&this.model.isAssignee?
         `
         <button ${this.model.disable?"disabled":""}  class="publish menu-btn" onclick="this.view.onPublish(event);"> ${emoji['speech_balloon']} Publish results</button>

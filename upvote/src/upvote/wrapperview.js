@@ -29,6 +29,7 @@ var WrapperView = View.extend({
     }
   </div>
   ${seat({ class: ToolTipView, id: "tooltip"})}
+  ${seat({ class: FooterView, id: "footer"})}
 </div>
 `;
   }

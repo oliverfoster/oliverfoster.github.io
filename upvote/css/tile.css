@@ -25,10 +25,24 @@
   display: inline-block;
 }
 
+.tile .avatar {
+  border-radius: 3px;
+  overflow: hidden;
+  margin-right: 2px;
+}
+
 .tile .avatar img {
   height: 28px;
   width: 28px;
-  margin-right: 2px;
+  vertical-align: bottom;
+}
+
+.tile.closed .up,
+.tile.closed .down {
+  display: none;
+}
+
+.tile .open svg {
   vertical-align: bottom;
 }
 

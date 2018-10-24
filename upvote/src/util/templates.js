@@ -33,7 +33,16 @@ var Templates = List.extend({
       if (existing.el === seat) continue;
       rafer.call(replaceWith, null, seat, existing.el);
       rafer.call(existing, "render");
+      rafer.call(this, "check");
     }
+  },
+
+  check: function() {
+    var navElement = elements("[link=perm"+sha256(location.hash.slice(1))+"]");
+    if (!navElement.length) return;
+    var rect = navElement[0].getBoundingClientRect();
+    navElement.toggleClass("linked", true);
+    document.body.scrollTo(0, rect.top - 20);
   },
 
   ready: function() {

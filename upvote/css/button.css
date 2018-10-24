@@ -33,6 +33,7 @@ button {
 }
 
 .menu-btn {
+  border-radius: 3px 3px 0 0;
   padding: 0px 10px;
   appearance: none;
   -webkit-appearance: none;
@@ -42,6 +43,10 @@ button {
   color: #0366d6;
   text-align: left;
   cursor: pointer;
+}
+
+.menu-btn svg {
+  vertical-align: bottom;
 }
 
 .menu-btn:disabled {

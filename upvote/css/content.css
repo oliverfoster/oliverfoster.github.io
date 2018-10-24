@@ -41,7 +41,8 @@
 
 .content-title svg {
   fill: #959da5;
-  margin-right: 3px;
+  margin-right: 6px;
+  vertical-align: bottom;
 }
 
 .content-title a {

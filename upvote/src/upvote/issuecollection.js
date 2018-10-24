@@ -12,6 +12,10 @@ var IssueCollection = Collection.extend({
 
   update: function(callback) {
     var loaded = 0;
+    if (!this.length) {
+      callback && callback();
+      return;
+    }
     this.forEach(function(issue) {
       issue.fetchReferencingComments(function(comments) {
         loaded++;
@@ -27,6 +31,10 @@ var IssueCollection = Collection.extend({
       var bRef = b.referenceComment;
       if (!aRef) return -1;
       if (!bRef) return 1;
+      if (b.state !== a.state) {
+        if (b.state === "closed") return -1;
+        return 1;
+      }
       var positiveDifference = (bRef.reactions['+1'] - bRef.reactions['1']) -
         (aRef.reactions['+1'] - aRef.reactions['1']);
       if (!positiveDifference) {
