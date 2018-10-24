@@ -17,6 +17,7 @@
 
 .menu li a {
   overflow: hidden;
+  text-decoration: none;
 }
 
 .menu svg {
