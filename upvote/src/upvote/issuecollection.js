@@ -18,9 +18,11 @@ var IssueCollection = Collection.extend({
     }
     this.forEach(function(issue) {
       issue.fetchReferencingComments(function(comments) {
-        loaded++;
-        if (loaded !== this.length) return;
-        callback && callback();
+        issue.fetchReactions(function() {
+          loaded++;
+          if (loaded !== this.length) return;
+          callback && callback();
+        }.bind(this));
       }.bind(this));
     }.bind(this));
   },

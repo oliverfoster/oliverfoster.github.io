@@ -17,9 +17,9 @@ var RepoModel = Model.extend({
   },
 
   fetchMilestones: function(callback) {
-    this.milestones = null;
+    this.biasMilestones = null;
     upvote.model.repo.milestones.fetch().then(function(obj) {
-      this.milestones = new Collection(obj.items);
+      this.biasMilestones = new Collection(obj.items);
       callback && callback();
     }.bind(this));
   },

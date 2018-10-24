@@ -285,6 +285,7 @@ var REPO_FIELDS = {
     'comments': {
       'reactions': false
     },
+    'reactions': false,
     'labels': false,
     'timeline': false
   },

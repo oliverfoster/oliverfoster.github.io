@@ -57,6 +57,10 @@ var IssueModel = Model.extend({
     upvote.model.repo.issues(this.number).comments.fetch().then(function(obj) {
       this.referenceCommentItems = new CommentCollection(obj.items, { issueNumber: this.number });
       var done = 0;
+      if (!this.referenceCommentItems.length) {
+        callback && callback();
+        return;
+      }
       this.referenceCommentItems.forEach(function(comment) {
         comment.hasReference = (null !== comment.body.match(rex));
         if (comment.hasReference) {
@@ -85,6 +89,9 @@ var IssueModel = Model.extend({
 
   acceptState$get$enum: function() {
     var referenceComment = this.referenceComment;
+    if (!referenceComment) {
+      return this.flags.accept ? "accepted" : "notaccepted";
+    }
     return referenceComment.flags.accept ? "accepted" : "notaccepted";
   },
 
@@ -93,15 +100,66 @@ var IssueModel = Model.extend({
   },
 
   accepted$get: function() {
+    var referenceComment = this.referenceComment;
+    if (!referenceComment) {
+      return this.flags.accept;
+    }
     return this.referenceComment.flags.accept
   },
 
   hasVoted: function(reactionName) {
+    var referenceComment = this.referenceComment;
+    if (!referenceComment) {
+      return this.reactionItems &&
+        this.reactionItems.find(function(reaction) {
+          if (reaction.content !== reactionName) return;
+          if (upvote.user.login !== reaction.user.login) return;
+          return true;
+        }.bind(this)) || false;
+    }
     return this.referenceComment.hasVoted(reactionName);
   },
 
-  reactions$get: function() {
-    return this.referenceComment.reactions;
+  fetchReactions: function(callback) {
+    this.reactions = {};
+    upvote.model.repo.issues(this.number).reactions.fetch().then(function(obj) {
+      obj.items.forEach(function(reaction) {
+        this.reactions[reaction.content] = this.reactions[reaction.content] || 0;
+        this.reactions[reaction.content]++;
+      }.bind(this));
+      this.reactionItems = obj.items;
+      callback && callback(this.reactionItems);
+    }.bind(this));
+  },
+
+  biasReactions$get: function() {
+    var referenceComment = this.referenceComment;
+    if (!referenceComment) {
+      return this.attributes.reactions || {};
+    }
+    return referenceComment.reactions;
+  },
+
+  toggleReaction: function(name, value, callback) {
+    var referenceComment = this.referenceComment;
+    if (!referenceComment) {
+      var complete = function() {
+        this.fetchReactions(callback);
+      }.bind(this);
+      if (value) {
+        upvote.model.repo.issues(this.number).reactions.create({
+          content: name
+        }).then(complete);
+      } else {
+        this.reactionItems.forEach(function(reaction) {
+          if (reaction.content !== name) return;
+          if (reaction.user.login !== upvote.user.login) return;
+          upvote.octo.reactions(reaction.id).remove().then(complete);
+        }.bind(this));
+      }
+      return;
+    }
+    referenceComment.toggleReaction(name, value, callback);
   },
 
   referenceComment$get: function() {
@@ -113,14 +171,6 @@ var IssueModel = Model.extend({
         referenceComment = proxy.referenceCommentItems[i];
         break;
       }
-    }
-    if (!referenceComment) {
-      referenceComment = new CommentModel({
-        body: "",
-        reactions: {}
-      }, {
-        issueNumber: this.attributes.number
-      });
     }
     return referenceComment;
   },
@@ -141,17 +191,16 @@ var IssueModel = Model.extend({
       ];
       this.pollIssues.order().filter(function(pollIssue) {
         if (pollIssue.state !== "open") return;
-        if (!pollIssue.referenceComment) return;
-        if (!pollIssue.referenceComment.flags.accept) return;
+        if (!pollIssue.accepted) return;
         return true;
       }).forEach(function(issue) {
-        var comment = issue.referenceComment;
+        var comment = issue.referenceComment
         table.push([
-          `[#${issue.number}](${comment.htmlUrl})`,
-          `[${issue.title}](${comment.htmlUrl})`,
-          (comment.reactions['+1'] - comment.reactions['1']),
-          comment.reactions['+1'],
-          comment.reactions['1']
+          `[#${issue.number}](${comment && comment.htmlUrl || issue.htmlUrl})`,
+          `[${issue.title}](${comment  && comment.htmlUrl || issue.htmlUrl})`,
+          (issue.biasReactions['+1'] - issue.biasReactions['-1']),
+          issue.biasReactions['+1'],
+          issue.biasReactions['-1']
         ]);
       });
 
@@ -193,14 +242,14 @@ var IssueModel = Model.extend({
           this.attachPollIssuesToMilestone(milestone, callback);
       }.bind(this));
     }.bind(this);
-    upvote.model.fetchMilestones(function() {
-      var milestone = upvote.model.milestones && (upvote.model.milestones.find(function(milestone) {
+    upvote.model.repo.fetchMilestones(function() {
+      var milestone = upvote.model.repo.biasMilestones && (upvote.model.repo.biasMilestones.find(function(milestone) {
         return milestone.number === existingMilestoneNumber;
-      }.bind(this)) || upvote.model.milestones.find(function(milestone) {
+      }.bind(this)) || upvote.model.repo.biasMilestones.find(function(milestone) {
         return milestone.title === this.title;
       }.bind(this)));
       if (!milestone) {
-        upvote.model.createMilestone({
+        upvote.model.repo.createMilestone({
           title: this.title,
           description: `Create from poll: ${this.title} #${this.number}`
         }, function(milestone) {
@@ -222,8 +271,7 @@ var IssueModel = Model.extend({
     this.fetchPollIssues(function() {
       this.pollIssues.forEach(function(issue) {
         if (issue.state !== "open") return done();
-        if (!issue.referenceComment) return done();
-        if (!issue.referenceComment.flags.accept) return done();
+        if (!issue.accepted) return done();
         upvote.model.repo.issues(issue.number).update({
           milestone: milestone.number
         }).then(function() {

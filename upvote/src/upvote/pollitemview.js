@@ -5,14 +5,16 @@ var PollItemView = View.extend({
   },
 
   onOpen: function(event) {
-    window.open(this.model.referenceComment.htmlUrl);
+    if (this.model.referenceComment) {
+      window.open(this.model.referenceComment.htmlUrl);
+      return;
+    }
+    window.open(this.model.htmlUrl);
   },
 
   onUpVote: function(event) {
     this.model.disable = true;
-    var referenceComment = this.model.referenceComment;
-    referenceComment &&
-    referenceComment.toggleReaction("+1", !referenceComment.hasVoted("+1"), function() {
+    this.model.toggleReaction("+1", !this.model.hasVoted("+1"), function() {
       this.model.disable = false;
       this.render();
     }.bind(this));
@@ -20,9 +22,7 @@ var PollItemView = View.extend({
 
   onDownVote: function() {
     this.model.disable = true;
-    var referenceComment = this.model.referenceComment;
-    referenceComment &&
-    referenceComment.toggleReaction("-1", !referenceComment.hasVoted("-1"), function() {
+    this.model.toggleReaction("-1", !this.model.hasVoted("-1"), function() {
       this.model.disable = false;
       this.render();
     }.bind(this));
@@ -30,12 +30,12 @@ var PollItemView = View.extend({
 
   onInclude: function() {
     this.model.disable = true;
-    var referenceComment = this.model.referenceComment;
-    referenceComment &&
-    referenceComment.toggleFlag("accept", !this.model.referenceComment.flags.accept, function() {
+    this.model.toggleFlag("accept", !this.model.flags.accept, function() {
       this.model.fetchReferencingComments(function() {
-        this.model.disable = false;
-        this.render();
+        this.model.fetchReactions(function() {
+          this.model.disable = false;
+          this.render();
+        }.bind(this));
       }.bind(this));
     }.bind(this));
 
@@ -52,8 +52,8 @@ var PollItemView = View.extend({
     <div class="menubar">
       <div class="padding"></div>
       <button ${this.model.disable?"disabled":""} class="open menu-btn" onclick="this.view.onOpen(event);">${svg['comment']} Conversation</button>
-      <button ${this.model.disable?"disabled":""} class="up menu-btn ${this.model.hasVoted("+1")?"voted":""}" tooltip="${this.model.hasVoted("+1")?"Voted +1.":"Not voted +1."}" onclick="this.view.onUpVote(event);"> ${emoji['+1']} ${or(this.model.reactions['+1'], 0)}</button>
-      <button ${this.model.disable?"disabled":""} class="down menu-btn ${this.model.hasVoted("-1")?"voted":""}" tooltip="${this.model.hasVoted("-1")?"Voted -1.":"Not voted -1."}"  onclick="this.view.onDownVote(event);"> ${emoji['-1']} ${or(this.model.reactions['1'], 0)}</button>
+      <button ${this.model.disable?"disabled":""} class="up menu-btn ${this.model.hasVoted("+1")?"voted":""}" tooltip="${this.model.hasVoted("+1")?"Voted +1.":"Not voted +1."}" onclick="this.view.onUpVote(event);"> ${emoji['+1']} ${or(this.model.biasReactions['+1'], 0)}</button>
+      <button ${this.model.disable?"disabled":""} class="down menu-btn ${this.model.hasVoted("-1")?"voted":""}" tooltip="${this.model.hasVoted("-1")?"Voted -1.":"Not voted -1."}"  onclick="this.view.onDownVote(event);"> ${emoji['-1']} ${or(this.model.biasReactions['-1'], 0)}</button>
       ${this.model.isIssueAssignee?
       `<button ${this.model.disable?"disabled":""} class="include menu-btn emoji" onclick="this.view.onInclude(event);"> ${this.model.accepted?emoji['heavy_check_mark']:emoji['x']}${this.model.accepted?" Accepted":" Not accepted"}</button>`:
       ``

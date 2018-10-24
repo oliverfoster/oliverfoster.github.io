@@ -103,7 +103,12 @@ var CommentModel = Model.extend({
   },
 
   fetchReactions: function(callback) {
+    this.reactions = {};
     upvote.model.repo.issues.comments(this.id).reactions.fetch().then(function(obj) {
+      obj.items.forEach(function(reaction) {
+        this.reactions[reaction.content] = this.reactions[reaction.content] || 0;
+        this.reactions[reaction.content]++;
+      }.bind(this));
       this.reactionItems = obj.items;
       callback && callback(this.reactionItems);
     }.bind(this));
