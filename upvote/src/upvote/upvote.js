@@ -115,7 +115,7 @@ var Upvote = Class.extend({
       this.user = user;
     }.bind(this));
     this.navigateTo = this.router.startHash;
-    if (this.navigateTo.login) this.navigateTo = this.defaultRoute;
+    if (this.navigateTo.login || !this.navigateTo[0]) this.navigateTo = this.defaultRoute;
     this.router.replace(this.navigateTo);
   },
 
