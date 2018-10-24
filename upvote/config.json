@@ -1,0 +1,25 @@
+{
+  "title": "Adapt Democracy",
+  "logo": "https://www.adaptlearning.org/wp-content/uploads/2016/01/nav_logo_white-alt-2-1.png",
+  "favicon": "https://www.adaptlearning.org/wp-content/uploads/2016/01/nav_logo_white-alt-2-1.png",
+  "acceptHeader": "application/vnd.github.mockingbird-preview, application/vnd.github.squirrel-girl-preview+json, application/vnd.github.echo-preview+json",
+  "repos": [
+    {
+      "user_name": "oliverfoster",
+      "repo_name": "adapt-process-recommendations",
+      "tag_name": "poll"
+    },
+    {
+      "user_name": "adaptlearning",
+      "repo_name": "adapt_framework",
+      "tag_name": "poll"
+    },
+    {
+      "user_name": "adaptlearning",
+      "repo_name": "adapt_authoring",
+      "tag_name": "poll"
+    }
+  ],
+  "client_id": "ff5cf9bb34c83b06f2fb",
+  "authenticator": "https://adapt-upvote.herokuapp.com/authenticate/${search.code}"
+}

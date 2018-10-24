@@ -1,0 +1,17 @@
+.repos-item .title,
+.repos-item .title a,
+.repos-item .title h1 {
+  font-size: 1em;
+  color: #0366d6;
+  font-weight: 400;
+}
+
+.repos-item .title,
+.repos-item .avatar {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.repos-item .header {
+  padding: 5px 10px 5px;
+}

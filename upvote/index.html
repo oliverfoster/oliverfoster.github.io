@@ -29,14 +29,41 @@
   <script src="./src/util/router.js"></script>
 
   <script src="./src/upvote/svgs.js"></script>
+  <script src="./src/upvote/emojis.js"></script>
   <script src="./src/upvote/upvote.js"></script>
+  <script src="./src/upvote/appmodel.js"></script>
+  <script src="./src/upvote/commentcollection.js"></script>
+  <script src="./src/upvote/commentmodel.js"></script>
+  <script src="./src/upvote/contentbodyview.js"></script>
+  <script src="./src/upvote/contenttitleview.js"></script>
+  <script src="./src/upvote/issuecollection.js"></script>
+  <script src="./src/upvote/issuemodel.js"></script>
+  <script src="./src/upvote/loginview.js"></script>
+  <script src="./src/upvote/navigationview.js"></script>
+  <script src="./src/upvote/pollitemview.js"></script>
+  <script src="./src/upvote/pollsitemview.js"></script>
+  <script src="./src/upvote/pollsview.js"></script>
+  <script src="./src/upvote/pollview.js"></script>
+  <script src="./src/upvote/repocollection.js"></script>
+  <script src="./src/upvote/repomodel.js"></script>
+  <script src="./src/upvote/repositemview.js"></script>
+  <script src="./src/upvote/reposview.js"></script>
+  <script src="./src/upvote/tooltipview.js"></script>
+  <script src="./src/upvote/wrapperview.js"></script>
 
   <link rel="stylesheet" type="text/css" href="./css/debug.css">
   <link rel="stylesheet" type="text/css" href="./css/index.css">
   <link rel="stylesheet" type="text/css" href="./css/markdown.css">
+  <link rel="stylesheet" type="text/css" href="./css/button.css">
+  <link rel="stylesheet" type="text/css" href="./css/content.css">
+  <link rel="stylesheet" type="text/css" href="./css/loading.css">
+  <link rel="stylesheet" type="text/css" href="./css/login.css">
+  <link rel="stylesheet" type="text/css" href="./css/tile.css">
+  <link rel="stylesheet" type="text/css" href="./css/tooltip.css">
+  <link rel="stylesheet" type="text/css" href="./css/wrapper.css">
+  <link rel="stylesheet" type="text/css" href="./css/repositem.css">
+  <link rel="stylesheet" type="text/css" href="./css/menu.css">
 
-  <link rel="shortcut icon" href="https://www.adaptlearning.org/wp-content/uploads/2016/01/nav_logo_white-alt-2-1.png">
-  <title>Adapt Democracy</title>
 </head>
   <body>
     <div id="upvote">
@@ -44,7 +71,8 @@
   </body>
   <script>
     var upvote = new Upvote({
-      el: elements("#upvote")
+      el: elements("#upvote"),
+      config: "./config.json"
     });
 
   </script>

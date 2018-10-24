@@ -1,0 +1,99 @@
+.content-navigation {
+  font-weight: 600;
+  text-align: left;
+  width: 100%;
+  padding:  8px 10px;
+  background: #24292e;
+  color: white;
+}
+
+.content-navigation ul {
+  display: inline-block;
+  list-style-type: none;
+  margin: 0;
+  padding: 10px 0 10px 20px;
+  vertical-align: top;
+}
+
+.content-navigation li {
+  display:  inline-block;
+  padding: 0 10px 0 0;
+  font-size: small;
+}
+
+.content-navigation li:last-child {
+  color: darkgrey;
+}
+
+.content-navigation a {
+  color: white;
+  text-decoration: none;
+}
+
+.content-title {
+  background: #fafbfc;
+  color: #0366d6;
+  padding: 0 10px 0;
+  border-top: 1px solid darkgray;
+  border-bottom: 1px solid #e1e4e8;
+  font-size: 1.1em;
+}
+
+.content-title svg {
+  fill: #959da5;
+  margin-right: 3px;
+}
+
+.content-title a {
+  color: #0366d6;
+  text-decoration: none;
+}
+
+.content-title a:last-child {
+  font-weight: 600;
+}
+
+.content-title .inner .location {
+  padding: 12px 0;
+}
+
+.content-title .issue-number {
+  font-weight: 300;
+  letter-spacing: -1px;
+}
+
+
+.content-body {
+  background: #fafbfc;
+  padding: 0;
+}
+
+.content-body .inner {
+  padding: 0;
+}
+
+.content-body .title a {
+  color:  #24292e;
+  text-decoration: none;
+}
+
+.content-body .markdown {
+  background: #fafbfc;
+}
+
+.content-title .inner,
+.content-body .inner {
+  width: 100%;
+  max-width: 980px;
+  margin: auto;
+}
+
+.content-container {
+  text-align: left;
+  flex: 1;
+}
+
+.content-outer {
+  max-width: 980px;
+  margin: auto;
+}
