@@ -1,5 +1,7 @@
 var ReposView = View.extend({
 
+  renderOnChange: false,
+
   attach: function() {
     this.clear();
     this.model.fetchRepos(function() {

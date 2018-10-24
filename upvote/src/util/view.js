@@ -3,6 +3,7 @@ var View = Class.extend({
   id: "",
   cid: "",
   tagName: "div",
+  renderOnChange: true,
 
   constructor: function View(options) {
     this.cid = ++View.ids;
@@ -34,7 +35,10 @@ var View = Class.extend({
     }
     this._model = model || {};
     this._model = new ModelClass(this._model, { preventPropagation: true });
-    this.listenTo(this.model.__model__, "change", this.render);
+    this.listenTo(this.model.__model__, "change", function() {
+      if (!this.renderOnChange) return;
+      this.render();
+    }.bind(this));
     this.render();
   },
 

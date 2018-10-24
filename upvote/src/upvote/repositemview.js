@@ -2,7 +2,7 @@ var ReposItemView = View.extend({
 
   onClick: function(event) {
     upvote.model.repo = this.model;
-    upvote.router.push("#polls");
+    upvote.router.push("#polls&path="+this.model.user_name+"/"+this.model.repo_name);
   },
 
   onLink: function(event) {

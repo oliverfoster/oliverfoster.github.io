@@ -4,14 +4,14 @@ var RepoModel = Model.extend({
     return Model.apply(this, arguments);
   },
 
+  path$get: function() {
+    return this.attributes.user_name + "/" + this.attributes.repo_name;
+  },
+
   fetchPolls: function(callback) {
     this.polls = null;
     upvote.model.repo.issues.fetch({state:"open", labels: upvote.model.repo.tag_name}).then(function(obj) {
       this.polls = new IssueCollection(obj.items);
-      // if (upvote.navigateTo) {
-      //   upvote.router.replace(upvote.navigateTo);
-      //   upvote.navigateTo = null;
-      // }
       callback && callback();
     }.bind(this));
   },

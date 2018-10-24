@@ -1,29 +1,26 @@
 var NavigationView = View.extend({
 
   template: function() {
-    var parts = upvote.router && upvote.router.hash.split("=") || [`#login`];
-    var name = parts[0];
-    var id = parts[1];
-    var className = name.slice(1);
+    var hash = upvote.router && upvote.router.hash || { login: true };
     return `
 <div id="${this.id}" class="content-navigation">
   <img class="logo logo-light" src="${upvote.config.logo}">
   <ul>
     <li><a href="#repos">${upvote.config.title}</a></li>
   ${
-    name==="#login" ?
+    hash.login ?
     `<li>Login with GitHub</li>` :
-    name==="#repos" ?
+    hash.repos ?
     `` :
-    name==="#polls" ?
+    hash.polls ?
     `<li>Open polls</li>` :
-    name==="#poll" ?
-    `<li><a href="#polls">Open polls</a></li><li>Poll issues</li>` :
-    ``
+    hash.poll ?
+    `<li><a href="#polls&path=${upvote.model.repo.path}">Open polls</a></li><li>Poll issues</li>` :
+    `404 Not found`
   }
   </ul>
   ${
-    name!=="#login" ?
+    !hash.login ?
     `<button id="logout" onclick="upvote.logout();">Log out</button>` :
     ``
   }

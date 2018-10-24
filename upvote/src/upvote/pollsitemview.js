@@ -2,7 +2,7 @@ var PollsItemView = View.extend({
 
   onClick: function(event) {
     upvote.model.poll = this.model;
-    upvote.router.push("#poll");
+    upvote.router.push("#poll&path="+upvote.model.repo.user_name+"/"+upvote.model.repo.repo_name+"&number="+this.model.number);
   },
 
   onLink: function(event) {

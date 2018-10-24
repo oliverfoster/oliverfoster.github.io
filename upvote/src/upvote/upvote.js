@@ -7,7 +7,6 @@ var Upvote = Class.extend({
   router: null,
 
   octo: null,
-  repo: null,
   user: null,
 
   config: null,
@@ -57,29 +56,52 @@ var Upvote = Class.extend({
       }
       return;
     }
-    var parts = hash.split("=");
-    var name = parts[0];
-    var id = parts[1];
-    if (!this.octo && hash !== "#login") {
+
+    if (!this.octo && !hash.login) {
       this.navigateTo = this.router.startHash;
-      if (this.navigateTo === "#login") this.navigateTo = "";
+      if (this.navigateTo.login) this.navigateTo = {};
       this.router.replace("#login");
       return;
     }
-    if (name === "#poll") {
-      if (!id) {
-        this.router.replace("#poll="+this.model.poll.number);
-        return;
-      }
-      if (!this.model.poll && id || this.model.poll.number !== id) {
-        this.model.poll = this.model.repo.polls.find(function(poll) {
-          return poll.number == id;
-        });
-      }
+
+    if (hash.polls && (!this.model.repo || this.model.repo.path != hash.path)) {
+      this.prepRepo(hash, function() {
+        this.navigate();
+      }.bind(this));
+    } else if (hash.poll && (!this.model.poll || this.model.poll.number != hash.number)) {
+      this.prepPoll(hash, function() {
+        this.navigate();
+      }.bind(this));
+    } else {
+      this.navigate();
     }
+
+  },
+
+  navigate: function() {
     delay(function() {
-    this.wrapper.render();
-  }.bind(this), 10);
+      this.wrapper.render();
+    }.bind(this), 10);
+  },
+
+  prepRepo: function(hash, callback) {
+    this.model.fetchRepos(function() {
+      this.model.repo = this.model.repos.find(function(repo) {
+        return repo.path === hash.path;
+      });
+      callback && callback();
+    }.bind(this));
+  },
+
+  prepPoll: function(hash, callback) {
+    this.prepRepo(hash, function() {
+      this.model.repo.fetchPolls(function() {
+        this.model.poll = this.model.repo.polls.find(function(poll) {
+          return poll.number == hash.number;
+        });
+        callback && callback();
+      }.bind(this));
+    }.bind(this));
   },
 
   login: function(options) {
@@ -89,13 +111,12 @@ var Upvote = Class.extend({
       if (!err) return;
       this.logout();
     }.bind(this));
-    this.repo = this.octo.repos(this.user_name, this.repo_name);
     this.octo.user.fetch().then(function(user) {
       this.user = user;
     }.bind(this));
     this.navigateTo = this.router.startHash;
-    if (this.navigateTo === "#login") this.navigateTo = "";
-    this.router.replace(this.defaultRoute);
+    if (this.navigateTo.login) this.navigateTo = this.defaultRoute;
+    this.router.replace(this.navigateTo);
   },
 
   logout: function() {

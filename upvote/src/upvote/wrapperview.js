@@ -5,27 +5,25 @@ var WrapperView = View.extend({
   initialize: function() {},
 
   template: function() {
-    var parts = upvote.router.hash.split("=");
-    var name = parts[0];
-    var id = parts[1];
-    var className = name.slice(1);
+    var hash = upvote.router.hash;
+    var className = hash[0];
     return `
 <div id="${this.id}" class="${className}">
   ${seat({ class: NavigationView, id: "content-navigation" })}
   ${
-    name=== "#repos" || name === "#polls" || name === "#poll" ?
+    hash.repos || hash.polls || hash.poll ?
     seat({ class: ContentTitleView, id: "content-title" }) :
     ``
   }
   <div class="content-container">
     ${
-      name === "#login" ?
+      hash.login ?
       seat({ class: LoginView, id: "login" }) :
-      name === "#repos" ?
+      hash.repos ?
       seat({ class: ReposView, model: this.model, id: "repos" }) :
-      name === "#polls" ?
+      hash.polls ?
       seat({ class: PollsView, model: this.model.repo, id: "polls" }) :
-      name === "#poll" ?
+      hash.poll ?
       seat({ class: PollView, model: this.model.poll, id: "poll" }) :
       ""
     }

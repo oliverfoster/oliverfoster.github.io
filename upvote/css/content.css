@@ -32,11 +32,11 @@
 
 .content-title {
   background: #fafbfc;
-  color: #0366d6;
+
   padding: 0 10px 0;
   border-top: 1px solid darkgray;
   border-bottom: 1px solid #e1e4e8;
-  font-size: 1.1em;
+
 }
 
 .content-title svg {
@@ -54,15 +54,10 @@
 }
 
 .content-title .inner .location {
+  color: #0366d6;
   padding: 12px 0;
+  font-size: 1.1em;
 }
-
-.content-title .issue-number {
-  font-weight: 300;
-  letter-spacing: -1px;
-}
-
-
 .content-body {
   background: #fafbfc;
   padding: 0;
@@ -72,16 +67,67 @@
   padding: 0;
 }
 
+.content-body .title {
+  padding-bottom: 5px;
+}
+
 .content-body .title a {
   color:  #24292e;
   text-decoration: none;
   font-size: 1.3em;
 }
 
+.content-body .title .issue-number {
+  font-weight: 300;
+  color: #a3aab1;
+  letter-spacing: -1px;
+}
+
+.content-body .avatar img {
+  height: 28px;
+  width: 28px;
+  margin-right: 2px;
+  vertical-align: bottom;
+}
+
+.content-body .subtitle {
+  margin-bottom: 4px;
+}
+
+.content-body .subtitle .state {
+  display: inline-block;
+  padding: 4px 8px;
+  font-weight: 600;
+  line-height: 20px;
+  color: #fff;
+  text-align: center;
+  background-color: #949494;
+  border-radius: 3px;
+  font-size: 14px;
+}
+
+.content-body .subtitle .state svg {
+  fill: white;
+  vertical-align: sub;
+}
+
+.content-body .subtitle .state.open {
+  background-color: #949494;
+  color: white;
+}
+
+.content-body .subtitle .state.closed {
+  background-color: #cb2431;
+  color: white;
+}
+
 @media (max-width: 980px) {
   .content-body .title a {
     font-weight: 600;
-    font-size: 1em;
+    font-size: 1.1em;
+  }
+  .content-body .readline {
+    font-size: 0.8em;
   }
 }
 
