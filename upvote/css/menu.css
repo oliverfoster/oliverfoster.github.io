@@ -19,6 +19,12 @@
   overflow: hidden;
 }
 
+.menu svg {
+  fill: #959da5;
+  margin-right: 6px;
+  vertical-align: bottom;
+}
+
 .menu li.selected {
   position: relative;
   display: inline-block;
