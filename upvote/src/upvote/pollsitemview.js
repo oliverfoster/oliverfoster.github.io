@@ -67,7 +67,7 @@ var PollsItemView = View.extend({
           </div>
         </div>
       </div>
-      <div class="body markdown">${markdown.makeHtml(this.model.body.replace(/\n\n\[Link to poll\]\([^\)]*\)/))}</div>
+      <div class="body markdown">${markdown.makeHtml(this.model.body.replace(/\n\[Link to poll\]\([^\)]*\)/, ''))}</div>
       <div class="footer">
       </div>
     </div>

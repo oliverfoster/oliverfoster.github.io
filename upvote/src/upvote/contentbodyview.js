@@ -19,7 +19,7 @@ var ContentBodyView = View.extend({
       <span class="readline">${upvote.model.poll.user.login} opened this issue ${moment(upvote.model.poll.createdAt).fromNow()}</span>
     </div>
     <div class="markdown">
-    ${markdown.makeHtml(upvote.model.poll.body.replace(/\n\n\[Link to poll\]\([^\)]*\)/, ''))}
+    ${markdown.makeHtml(upvote.model.poll.body.replace(/\n\[Link to poll\]\([^\)]*\)/, ''))}
     </div>
   </div>
 </div>
