@@ -21,5 +21,5 @@
     }
   ],
   "client_id": "ff5cf9bb34c83b06f2fb",
-  "authenticator": "https://adapt-upvote.herokuapp.com/authenticate/${search.code}"
+  "authenticator": "https://adapt-upvote.herokuapp.com/authenticate/${code}"
 }

@@ -47,7 +47,7 @@ var Upvote = Class.extend({
       var search = this.router.search;
       if (search.code) {
         document.body.style.display = "none";
-        getUrl(replace(upvote.config.authenticator, {search: search}), function(data) {
+        getUrl(replace(upvote.config.authenticator, {code: search.code}), function(data) {
           data = JSON.parse(data);
           document.cookie = `oauth=${data.token};path=/;max-age=31536000;samesite`;
           location.href = location.href.slice(0, location.href.indexOf("?"));
