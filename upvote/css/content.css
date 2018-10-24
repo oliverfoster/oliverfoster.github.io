@@ -75,6 +75,14 @@
 .content-body .title a {
   color:  #24292e;
   text-decoration: none;
+  font-size: 1.3em;
+}
+
+@media (max-width: 980px) {
+  .content-body .title a {
+    font-weight: 600;
+    font-size: 1em;
+  }
 }
 
 .content-body .markdown {
