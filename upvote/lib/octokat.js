@@ -1204,7 +1204,7 @@ module.exports = function () {
       }
 
       var headers = {
-        'Accept': this._clientOptions.acceptHeader || 'application/json'
+        'Accept-Encoding': this._clientOptions.acceptHeader || 'application/json'
 
         // Safari/Firefox do not like setting the user-agent header
       };if (this._clientOptions.userAgent) {
@@ -1228,7 +1228,7 @@ module.exports = function () {
 
 
         if (options.isRaw) {
-          headers['Accept'] = 'application/vnd.github.raw';
+          headers['Accept-Encoding'] = 'application/vnd.github.raw';
         }
 
         var fetchArgs = {
@@ -1802,7 +1802,7 @@ module.exports = new (function () {
 
       var acceptHeader = DEFAULT_HEADER(path);
       if (acceptHeader) {
-        input.headers['Accept'] = acceptHeader;
+        input.headers['Accept-Encoding'] = acceptHeader;
       }
 
       return Promise.resolve(input);
@@ -2132,7 +2132,7 @@ module.exports = new (function () {
         var isBase64 = options.isBase64;
 
         if (isBase64) {
-          input.headers['Accept'] = 'application/vnd.github.raw';
+          input.headers['Accept-Encoding'] = 'application/vnd.github.raw';
           input.mimeType = 'text/plain; charset=x-user-defined';
         }
       }
