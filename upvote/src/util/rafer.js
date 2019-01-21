@@ -122,6 +122,7 @@ var Rafer = Class.extend({
       this.mode = "wait";
       console.log("Defered queue modified by queue, switching to wait mode.");
     }
+    this.trigger("flushed");
   },
 
   request: function(callback, allowMultipleCalls) {
@@ -156,6 +157,8 @@ var Rafer = Class.extend({
     this.request();
   }
 
+}, null, {
+  instanceEvents: true
 });
 
 var rafer = new Rafer();

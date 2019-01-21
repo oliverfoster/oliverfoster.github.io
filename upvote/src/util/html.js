@@ -71,3 +71,19 @@ var createEvent = function(name, options) {
   event.initEvent(name, options.bubbles, options.cancelable);
   return event;
 };
+
+var createElement = function(tagName, options) {
+  var element = document.createElement(tagName);
+  for (var name in options) {
+    var value = options[name];
+    switch (name) {
+      case "html":
+        element.innerHTML = value;
+        break;
+      default:
+        element.setAttribute(name, value);
+        break;
+    }
+  }
+  return element;
+};

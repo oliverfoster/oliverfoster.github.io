@@ -3,13 +3,15 @@ var EventsInitialize = function(subject) {
   if (!subject.events) {
     Object.defineProperty(subject, 'events', {
       value: new EventsRegistry(),
-      enumerable: false
+      enumerable: false,
+      writable: true
     });
   }
   if (!subject.trigger) {
     Object.defineProperty(subject, 'trigger', {
       value: Events.trigger,
-      enumerable: false
+      enumerable: false,
+      writable: true
     });
   }
 };

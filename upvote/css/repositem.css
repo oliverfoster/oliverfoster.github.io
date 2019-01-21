@@ -1,0 +1,25 @@
+.repos-item .title,
+.repos-item .title a,
+.repos-item .title h1 {
+  font-size: 1em;
+  font-weight: 500;
+}
+
+.repos-item .title,
+.repos-item .avatar {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.repos-item .avatar {
+  margin-right: 10px;
+}
+
+.repos-item .avatar img {
+  height: 42px;
+  width: 42px;
+}
+
+.repos-item .header {
+  padding: 8px 10px 8px;
+}

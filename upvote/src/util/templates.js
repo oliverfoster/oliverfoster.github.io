@@ -1,6 +1,8 @@
 var Templates = List.extend({
 
-  constructor: function Templates() {},
+  constructor: function Templates() {
+    this.ready = debounce(this.ready, 500);
+  },
 
   in: function(context) {
     this.push(context);
@@ -11,6 +13,8 @@ var Templates = List.extend({
     var oldContext = this.pop();
     if (context !== oldContext) throw "Bad context management";
     this.attachChildren(oldContext);
+    if (this.length) return;
+    this.ready();
   },
 
   children$get$enum: function() {
@@ -27,11 +31,26 @@ var Templates = List.extend({
       if (!existing) continue;
       existing.attach && existing.attach();
       if (existing.el === seat) continue;
-      replaceWith(seat, existing.el);
-      existing.render();
+      rafer.call(replaceWith, null, seat, existing.el);
+      rafer.call(existing, "render");
+      rafer.call(this, "check");
     }
+  },
+
+  check: function() {
+    var navElement = elements("[link=perm"+sha256(location.hash.slice(1))+"]");
+    if (!navElement.length) return;
+    var rect = navElement[0].getBoundingClientRect();
+    navElement.toggleClass("linked", true);
+    document.body.scrollTo(0, rect.top - 20);
+  },
+
+  ready: function() {
+    this.trigger("ready");
   }
 
+}, null, {
+  instanceEvents: true
 });
 
 var templates = new Templates();

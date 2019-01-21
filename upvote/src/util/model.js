@@ -24,7 +24,7 @@ var ProxyCreate = function(subject, attributes, options) {
       var typeOfValue = typeof value;
       switch (typeOfValue) {
         case "function":
-          return this.__bound__[key] = this.__bound__[key] || this.attributes[key].bind(this.attributes);
+          return this.attributes[key];//this.__bound__[key] = this.__bound__[key] || this.attributes[key].bind(this.attributes);
       }
       var isAnObject = (typeOfValue === "object" && value !== null);
       if (!isAnObject) return this.attributes[key];

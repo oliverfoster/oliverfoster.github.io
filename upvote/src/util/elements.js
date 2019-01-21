@@ -27,7 +27,18 @@ var Elements = List.extend({
     return new Elements(items);
   },
 
+  differenceQuery(selectorA, selectorB) {
+    var listA = this.query(selectorA);
+    var listB = this.query(selectorB);
+    return elements(listA.filter(function(a1) {
+      return !listB.find(function(b1) {
+        return a1 === b1;
+      });
+    }));
+  },
+
   query: function(selector) {
+    if (selector instanceof Elements) return selector;
     var result = new Elements();
     this.forEach(function(item) {
       result.push.apply(result, item.querySelectorAll(selector));

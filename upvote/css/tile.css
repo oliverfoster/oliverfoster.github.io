@@ -1,0 +1,148 @@
+.tile {
+  display: block;
+  overflow: hidden;
+  border: 1px solid #e1e4e8;
+  border-radius: 3px;
+  margin: auto;
+  margin: 24px -1px;
+  padding: 0 0 0 0;
+}
+
+.tile .header {
+  display: flex;
+  padding: 5px 10px 15px;
+  border-bottom: 1px solid #e1e4e8;
+  background-color: #f6f8fa;
+}
+
+.tile .header .label {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 5px;
+  margin-right: 5px;
+  margin-top: 5px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.tile .avatar {
+  border-radius: 3px;
+  overflow: hidden;
+  margin-right: 2px;
+}
+
+.tile .avatar img {
+  height: 28px;
+  width: 28px;
+  vertical-align: bottom;
+}
+
+.tile.closed .up,
+.tile.closed .down {
+  display: none;
+}
+
+.tile .open svg {
+  vertical-align: bottom;
+}
+
+.tile .up img {
+  vertical-align: text-bottom;
+}
+
+.tile .down img {
+  vertical-align: bottom;
+}
+
+.tile .title {
+  font-weight: bold;
+}
+
+.tile .title a {
+  color:  #24292e;
+  text-decoration: none;
+}
+
+.tile .title h1 {
+  font-weight:  600;
+  font-size: 1.3em;
+  line-height: 1.4;
+  margin-top: 0;
+  margin-bottom: 5px;
+}
+
+@media (max-width: 980px) {
+  .tile .title h1 {
+    font-weight: 600;
+    font-size: 1.1em;
+  }
+
+  .tile .readline {
+    font-size: 0.8em;
+  }
+}
+
+.tile .subtitle {
+  margin-bottom: 4px;
+}
+
+.tile .subtitle .state {
+  display: inline-block;
+  padding: 4px 8px;
+  font-weight: 600;
+  line-height: 20px;
+  color: #fff;
+  text-align: center;
+  background-color: #6a737d;
+  border-radius: 3px;
+  font-size: 14px;
+}
+
+.tile .subtitle .state svg {
+  fill: white;
+  vertical-align: sub;
+}
+
+.tile .subtitle .state.open {
+  background-color: #2cbe4e;
+  color: white;
+}
+
+.tile .subtitle .state.closed {
+  background-color: #cb2431;
+  color: white;
+}
+
+.tile .issue-number {
+  font-weight: 300;
+  color: #a3aab1;
+  letter-spacing: -1px;
+}
+
+.tile .inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.tile .content {
+  flex: 1;
+  padding: 0 0 0 0;
+}
+
+.tile .body {
+  padding:  10px;
+}
+
+.tile .menubar {
+  display: flex;
+  width: 100%;
+  height: 28px;
+  order: 2;
+  /* border-top: 1px solid #e1e4e8; */
+  font-size: 0;
+}
+
+.tile .menubar .padding {
+  flex: 1;
+}
