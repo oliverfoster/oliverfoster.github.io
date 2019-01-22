@@ -828,7 +828,7 @@ var OctokatBase = function OctokatBase() {
   // the octokat instance
   var instance = {};
 
-  var fetchImpl = OctokatBase.Fetch || fetch;
+  var fetchImpl = fetch;
 
   var request = function request(method, path, data) {
     var options = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : { raw: false, isBase64: false, isBoolean: false };
@@ -1204,11 +1204,11 @@ module.exports = function () {
         path = '' + this._clientOptions.rootURL + path;
       }
 
-      var headers = {
-        'Accept-Encoding': this._clientOptions.acceptHeader || 'application/json'
+      var headers = {};
+      headers['Accept'] = this._clientOptions.acceptHeader || 'application/json';
 
-        // Safari/Firefox do not like setting the user-agent header
-      };if (this._clientOptions.userAgent) {
+      // Safari/Firefox do not like setting the user-agent header
+      if (this._clientOptions.userAgent) {
         headers['User-Agent'] = this._clientOptions.userAgent;
       }
 
@@ -1229,7 +1229,7 @@ module.exports = function () {
 
 
         if (options.isRaw) {
-          headers['Accept-Encoding'] = 'application/vnd.github.raw';
+          headers['Accept'] = 'application/vnd.github.raw';
         }
 
         var fetchArgs = {
@@ -1803,7 +1803,7 @@ module.exports = new (function () {
 
       var acceptHeader = DEFAULT_HEADER(path);
       if (acceptHeader) {
-        input.headers['Accept-Encoding'] = acceptHeader;
+        input.headers['Accept'] = acceptHeader;
       }
 
       return Promise.resolve(input);
@@ -2133,7 +2133,7 @@ module.exports = new (function () {
         var isBase64 = options.isBase64;
 
         if (isBase64) {
-          input.headers['Accept-Encoding'] = 'application/vnd.github.raw';
+          input.headers['Accept'] = 'application/vnd.github.raw';
           input.mimeType = 'text/plain; charset=x-user-defined';
         }
       }
