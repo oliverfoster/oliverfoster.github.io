@@ -1593,19 +1593,19 @@ html.adapt-scrolling body {
 .test {
   color: transparent !important;
 }
-.test .tooltip {
+.test .tooltip__body {
   pointer-events: all !important;
   background-color: transparent !important;
   outline: 1px solid black !important;
 }
-.test .tooltip:hover {
+.test .tooltip__body:hover {
   background-color: red !important;
   color: white !important;
 }
 .tooltip__container {
   overflow: hidden;
 }
-.tooltip__container .tooltip__target {
+.tooltip {
   position: absolute;
   left: calc(var(--adapt-tooltip-target-position-left) + var(--adapt-tooltip-scroll-left));
   top: calc(var(--adapt-tooltip-target-position-top) + var(--adapt-tooltip-scroll-top));
@@ -1615,17 +1615,17 @@ html.adapt-scrolling body {
   opacity: 0;
   z-index: 0;
 }
-.tooltip__container .tooltip__target.is-shown {
+.is-shown.tooltip {
   opacity: 1;
 }
-.tooltip__container .tooltip__target.is-loading {
+.is-loading.tooltip {
   visibility: hidden;
 }
-.tooltip__container .tooltip__target.tooltip-fixed {
+.is-fixed.tooltip {
   position: fixed !important;
   z-index: 82;
 }
-.tooltip__container .tooltip {
+.tooltip__body {
   position: absolute;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1640,16 +1640,16 @@ html.adapt-scrolling body {
   border-radius: 0.35rem;
 }
 @media (min-width: 47.5rem) {
-  .tooltip__container .tooltip {
+  .tooltip__body {
     max-width: 30rem;
   }
 }
-.tooltip__container .tooltip__arrow {
+.tooltip__arrow {
   position: absolute;
   width: 0.7rem;
   height: 0.7rem;
 }
-.tooltip__container .tooltip__arrow:before {
+.tooltip__arrow:before {
   content: "";
   position: absolute;
   top: 0;
@@ -1662,299 +1662,255 @@ html.adapt-scrolling body {
   border-color: transparent;
   border-bottom-color: rgba(0, 0, 0, 0.85);
 }
-.is-top.is-outside.is-vertical-axis .tooltip {
+.is-top.is-outside.is-vertical-axis .tooltip__body {
   bottom: 100%;
   margin-bottom: 1rem;
 }
-.is-bottom.is-outside.is-vertical-axis .tooltip {
+.is-bottom.is-outside.is-vertical-axis .tooltip__body {
   top: 100%;
   margin-top: 1rem;
 }
-.is-left.is-arrow-start.is-outside.is-vertical-axis .tooltip {
+.is-left.is-arrow-start.is-outside.is-vertical-axis .tooltip__body {
   right: calc(100% - 0.7rem - (0.35rem * 2));
 }
-[dir="rtl"] .is-left.is-arrow-start.is-outside.is-vertical-axis .tooltip {
+.dir-rtl .is-left.is-arrow-start.is-outside.is-vertical-axis .tooltip__body {
   left: calc(100% - 0.7rem - (0.35rem * 2));
   right: initial;
 }
-.is-left.is-arrow-middle.is-outside.is-vertical-axis .tooltip {
+.is-left.is-arrow-middle.is-outside.is-vertical-axis .tooltip__body {
   right: calc(50% - (0.7rem / 2) - 0.35rem);
 }
-[dir="rtl"] .is-left.is-arrow-middle.is-outside.is-vertical-axis .tooltip {
+.dir-rtl .is-left.is-arrow-middle.is-outside.is-vertical-axis .tooltip__body {
   left: calc(50% - (0.7rem / 2) - 0.35rem);
   right: initial;
 }
-.is-left.is-arrow-end.is-outside.is-vertical-axis .tooltip {
+.is-left.is-arrow-end.is-outside.is-vertical-axis .tooltip__body {
   right: 0%;
 }
-[dir="rtl"] .is-left.is-arrow-end.is-outside.is-vertical-axis .tooltip {
+.dir-rtl .is-left.is-arrow-end.is-outside.is-vertical-axis .tooltip__body {
   left: 0%;
   right: initial;
 }
-.is-middle.is-arrow-start.is-outside.is-vertical-axis .tooltip {
+.is-middle.is-arrow-start.is-outside.is-vertical-axis .tooltip__body {
   left: calc(0% + 0.7rem);
   transform: translate(-50%);
 }
-[dir="rtl"] .is-middle.is-arrow-start.is-outside.is-vertical-axis .tooltip {
+.dir-rtl .is-middle.is-arrow-start.is-outside.is-vertical-axis .tooltip__body {
   right: calc(0% + 0.7rem);
   left: initial;
   transform: translate(50%);
 }
-.is-middle.is-arrow-middle.is-outside.is-vertical-axis .tooltip {
+.is-middle.is-arrow-middle.is-outside.is-vertical-axis .tooltip__body {
   left: 50%;
   transform: translate(-50%);
 }
-.is-middle.is-arrow-end.is-outside.is-vertical-axis .tooltip {
+.is-middle.is-arrow-end.is-outside.is-vertical-axis .tooltip__body {
   left: calc(100% - 0.7rem);
   transform: translate(-50%);
 }
-[dir="rtl"] .is-middle.is-arrow-end.is-outside.is-vertical-axis .tooltip {
+.dir-rtl .is-middle.is-arrow-end.is-outside.is-vertical-axis .tooltip__body {
   right: calc(100% - 0.7rem);
   left: initial;
   transform: translate(50%);
 }
-.is-right.is-arrow-start.is-outside.is-vertical-axis .tooltip {
+.is-right.is-arrow-start.is-outside.is-vertical-axis .tooltip__body {
   left: 0%;
 }
-[dir="rtl"] .is-right.is-arrow-start.is-outside.is-vertical-axis .tooltip {
+.dir-rtl .is-right.is-arrow-start.is-outside.is-vertical-axis .tooltip__body {
   right: 0%;
   left: initial;
 }
-.is-right.is-arrow-middle.is-outside.is-vertical-axis .tooltip {
+.is-right.is-arrow-middle.is-outside.is-vertical-axis .tooltip__body {
   left: calc(50% - (0.7rem / 2) - 0.35rem);
 }
-[dir="rtl"] .is-right.is-arrow-middle.is-outside.is-vertical-axis .tooltip {
+.dir-rtl .is-right.is-arrow-middle.is-outside.is-vertical-axis .tooltip__body {
   right: calc(50% - (0.7rem / 2) - 0.35rem);
   left: initial;
 }
-.is-right.is-arrow-end.is-outside.is-vertical-axis .tooltip {
+.is-right.is-arrow-end.is-outside.is-vertical-axis .tooltip__body {
   left: calc(100% - 0.7rem - (0.35rem * 2));
 }
-[dir="rtl"] .is-right.is-arrow-end.is-outside.is-vertical-axis .tooltip {
+.dir-rtl .is-right.is-arrow-end.is-outside.is-vertical-axis .tooltip__body {
   right: calc(100% - 0.7rem - (0.35rem * 2));
   left: initial;
 }
-.is-fill-width.is-arrow-start.is-outside.is-vertical-axis .tooltip,
-.is-fill-width.is-arrow-middle.is-outside.is-vertical-axis .tooltip,
-.is-fill-width.is-arrow-end.is-outside.is-vertical-axis .tooltip {
+.is-fill-width.is-arrow-start.is-outside.is-vertical-axis .tooltip__body,
+.is-fill-width.is-arrow-middle.is-outside.is-vertical-axis .tooltip__body,
+.is-fill-width.is-arrow-end.is-outside.is-vertical-axis .tooltip__body {
   left: calc(var(--adapt-tooltip-target-distancetoedge-left) * -1);
   right: calc(var(--adapt-tooltip-target-distancetoedge-right) * -1);
   max-width: 56.25rem;
   margin-left: auto;
   margin-right: auto;
   width: initial;
+  transform: initial;
 }
-[dir="rtl"] .is-fill-width.is-arrow-start.is-outside.is-vertical-axis .tooltip,
-[dir="rtl"] .is-fill-width.is-arrow-middle.is-outside.is-vertical-axis .tooltip,
-[dir="rtl"] .is-fill-width.is-arrow-end.is-outside.is-vertical-axis .tooltip {
+.dir-rtl .is-fill-width.is-arrow-start.is-outside.is-vertical-axis .tooltip__body,
+.dir-rtl .is-fill-width.is-arrow-middle.is-outside.is-vertical-axis .tooltip__body,
+.dir-rtl .is-fill-width.is-arrow-end.is-outside.is-vertical-axis .tooltip__body {
   left: calc(var(--adapt-tooltip-target-distancetoedge-left) * -1);
   right: calc(var(--adapt-tooltip-target-distancetoedge-right) * -1);
 }
-.is-top.is-fill-width.is-outside.is-vertical-axis .tooltip {
+.is-top.is-fill-width.is-outside.is-vertical-axis .tooltip__body {
   max-height: calc(var(--adapt-tooltip-target-distancetoedge-top) - 1rem);
 }
-.is-bottom.is-fill-width.is-outside.is-vertical-axis .tooltip {
+.is-bottom.is-fill-width.is-outside.is-vertical-axis .tooltip__body {
   max-height: calc(var(--adapt-tooltip-target-distancetoedge-bottom) - 1rem);
 }
-.is-snap-left.is-outside.is-vertical-axis .tooltip {
+.is-snap-left.is-outside.is-vertical-axis .tooltip__body {
   left: calc(var(--adapt-tooltip-target-distancetoedge-left) * -1) !important;
   transform: none !important;
   right: initial !important;
 }
-.is-snap-right.is-outside.is-vertical-axis .tooltip {
+.is-snap-right.is-outside.is-vertical-axis .tooltip__body {
   right: calc(var(--adapt-tooltip-target-distancetoedge-right) * -1) !important;
   transform: none !important;
   left: initial !important;
 }
-.is-left.is-outside.is-horizontal-axis .tooltip {
+.is-left.is-outside.is-horizontal-axis .tooltip__body {
   right: 100%;
   margin-right: 1rem;
 }
-[dir="rtl"] .is-left.is-outside.is-horizontal-axis .tooltip {
+.dir-rtl .is-left.is-outside.is-horizontal-axis .tooltip__body {
   left: 100%;
   right: initial;
   margin-left: 1rem;
   margin-right: initial;
 }
-.is-right.is-outside.is-horizontal-axis .tooltip {
+.is-right.is-outside.is-horizontal-axis .tooltip__body {
   left: 100%;
   margin-left: 1rem;
 }
-[dir="rtl"] .is-right.is-outside.is-horizontal-axis .tooltip {
+.dir-rtl .is-right.is-outside.is-horizontal-axis .tooltip__body {
   right: 100%;
   left: initial;
   margin-right: 1rem;
   margin-left: initial;
 }
-.is-top.is-arrow-start.is-outside.is-horizontal-axis .tooltip {
+.is-top.is-arrow-start.is-outside.is-horizontal-axis .tooltip__body {
   bottom: calc(100% - 0.7rem - (0.35rem * 2));
 }
-.is-top.is-arrow-middle.is-outside.is-horizontal-axis .tooltip {
+.is-top.is-arrow-middle.is-outside.is-horizontal-axis .tooltip__body {
   bottom: calc(50% - (0.7rem / 2) - 0.35rem);
 }
-.is-top.is-arrow-end.is-outside.is-horizontal-axis .tooltip {
+.is-top.is-arrow-end.is-outside.is-horizontal-axis .tooltip__body {
   bottom: 0%;
 }
-.is-center.is-arrow-start.is-outside.is-horizontal-axis .tooltip {
+.is-center.is-arrow-start.is-outside.is-horizontal-axis .tooltip__body {
   top: calc(0% + 0.7rem);
   transform: translateY(-50%);
 }
-.is-center.is-arrow-middle.is-outside.is-horizontal-axis .tooltip {
+.is-center.is-arrow-middle.is-outside.is-horizontal-axis .tooltip__body {
   top: 50%;
   transform: translateY(-50%);
 }
-.is-center.is-arrow-end.is-outside.is-horizontal-axis .tooltip {
+.is-center.is-arrow-end.is-outside.is-horizontal-axis .tooltip__body {
   top: calc(100% - 0.7rem);
   transform: translateY(-50%);
 }
-.is-bottom.is-arrow-start.is-outside.is-horizontal-axis .tooltip {
+.is-bottom.is-arrow-start.is-outside.is-horizontal-axis .tooltip__body {
   top: 0%;
 }
-.is-bottom.is-arrow-middle.is-outside.is-horizontal-axis .tooltip {
+.is-bottom.is-arrow-middle.is-outside.is-horizontal-axis .tooltip__body {
   top: calc(50% - (0.7rem / 2) - 0.35rem);
 }
-.is-bottom.is-arrow-end.is-outside.is-horizontal-axis .tooltip {
+.is-bottom.is-arrow-end.is-outside.is-horizontal-axis .tooltip__body {
   top: calc(100% - 0.7rem - (0.35rem * 2));
 }
-.is-left.is-fill-height.is-outside.is-horizontal-axis .tooltip {
+.is-left.is-fill-height.is-outside.is-horizontal-axis .tooltip__body {
   left: calc(var(--adapt-tooltip-target-distancetoedge-left) * -1);
   max-height: var(--adapt-tooltip-viewport-constrained-height);
   max-width: unset;
   width: unset;
 }
-[dir="rtl"] .is-left.is-fill-height.is-outside.is-horizontal-axis .tooltip {
+.dir-rtl .is-left.is-fill-height.is-outside.is-horizontal-axis .tooltip__body {
   right: calc(var(--adapt-tooltip-target-distancetoedge-right) * -1);
   left: 100%;
 }
-.is-right.is-fill-height.is-outside.is-horizontal-axis .tooltip {
+.is-right.is-fill-height.is-outside.is-horizontal-axis .tooltip__body {
   right: calc(var(--adapt-tooltip-target-distancetoedge-right) * -1);
   max-height: var(--adapt-tooltip-viewport-constrained-height);
   max-width: unset;
   width: unset;
 }
-[dir="rtl"] .is-right.is-fill-height.is-outside.is-horizontal-axis .tooltip {
+.dir-rtl .is-right.is-fill-height.is-outside.is-horizontal-axis .tooltip__body {
   left: calc(var(--adapt-tooltip-target-distancetoedge-left) * -1);
   right: 100%;
 }
-.is-snap-top.is-outside.is-horizontal-axis .tooltip {
+.is-snap-top.is-outside.is-horizontal-axis .tooltip__body {
   top: calc(var(--adapt-tooltip-target-distancetoedge-top) * -1) !important;
   transform: none !important;
   bottom: initial !important;
 }
-.is-snap-bottom.is-outside.is-horizontal-axis .tooltip {
+.is-snap-bottom.is-outside.is-horizontal-axis .tooltip__body {
   bottom: calc(var(--adapt-tooltip-target-distancetoedge-bottom) * -1) !important;
   transform: none !important;
   top: initial !important;
 }
-.is-top.is-left.is-inside .tooltip {
+.is-top.is-left.is-inside .tooltip__body {
   left: 0%;
   top: 0%;
 }
-[dir="rtl"] .is-top.is-left.is-inside .tooltip {
+.dir-rtl .is-top.is-left.is-inside .tooltip__body {
   right: 0%;
   left: initial;
 }
-.is-top.is-middle.is-inside .tooltip {
+.is-top.is-middle.is-inside .tooltip__body {
   left: 50%;
   top: 0%;
   transform: translateX(-50%);
 }
-.is-top.is-right.is-inside .tooltip {
+.is-top.is-right.is-inside .tooltip__body {
   right: 0%;
   top: 0%;
 }
-[dir="rtl"] .is-top.is-right.is-inside .tooltip {
+.dir-rtl .is-top.is-right.is-inside .tooltip__body {
   left: 0%;
   right: initial;
 }
-.is-center.is-right.is-inside .tooltip {
+.is-center.is-right.is-inside .tooltip__body {
   right: 0%;
   top: 50%;
   transform: translateY(-50%);
 }
-[dir="rtl"] .is-center.is-right.is-inside .tooltip {
+.dir-rtl .is-center.is-right.is-inside .tooltip__body {
   left: 0%;
   right: initial;
 }
-.is-center.is-middle.is-inside .tooltip {
+.is-center.is-middle.is-inside .tooltip__body {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
 }
-.is-center.is-left.is-inside .tooltip {
+.is-center.is-left.is-inside .tooltip__body {
   left: 0%;
   top: 50%;
   transform: translateY(-50%);
 }
-[dir="rtl"] .is-center.is-left.is-inside .tooltip {
+.dir-rtl .is-center.is-left.is-inside .tooltip__body {
   right: 0%;
   left: initial;
 }
-.is-bottom.is-left.is-inside .tooltip {
+.is-bottom.is-left.is-inside .tooltip__body {
   left: 0%;
   bottom: 0%;
 }
-[dir="rtl"] .is-bottom.is-left.is-inside .tooltip {
+.dir-rtl .is-bottom.is-left.is-inside .tooltip__body {
   right: 0%;
   left: initial;
 }
-.is-bottom.is-middle.is-inside .tooltip {
+.is-bottom.is-middle.is-inside .tooltip__body {
   left: 50%;
   bottom: 0%;
   transform: translateX(-50%);
 }
-.is-bottom.is-right.is-inside .tooltip {
+.is-bottom.is-right.is-inside .tooltip__body {
   right: 0%;
   bottom: 0%;
 }
-[dir="rtl"] .is-bottom.is-right.is-inside .tooltip {
+.dir-rtl .is-bottom.is-right.is-inside .tooltip__body {
   left: 0%;
   right: initial;
-}
-.is-top.is-left.is-inside.tooltip__target {
-  transform-origin: top left;
-}
-[dir="rtl"] .is-top.is-left.is-inside.tooltip__target {
-  transform-origin: top right;
-}
-.is-top.is-middle.is-inside.tooltip__target {
-  transform-origin: top center;
-}
-.is-top.is-right.is-inside.tooltip__target {
-  transform-origin: top right;
-}
-[dir="rtl"] .is-top.is-right.is-inside.tooltip__target {
-  transform-origin: top left;
-}
-.is-center.is-left.is-inside.tooltip__target {
-  transform-origin: center left;
-}
-[dir="rtl"] .is-center.is-left.is-inside.tooltip__target {
-  transform-origin: center right;
-}
-.is-center.is-middle.is-inside.tooltip__target {
-  transform-origin: center;
-}
-.is-center.is-right.is-inside.tooltip__target {
-  transform-origin: center right;
-}
-[dir="rtl"] .is-center.is-right.is-inside.tooltip__target {
-  transform-origin: center left;
-}
-.is-bottom.is-left.is-inside.tooltip__target {
-  transform-origin: bottom left;
-}
-[dir="rtl"] .is-bottom.is-left.is-inside.tooltip__target {
-  transform-origin: bottom right;
-}
-.is-bottom.is-middle.is-inside.tooltip__target {
-  transform-origin: bottom center;
-}
-.is-bottom.is-right.is-inside.tooltip__target {
-  transform-origin: bottom right;
-}
-[dir="rtl"] .is-bottom.is-right.is-inside.tooltip__target {
-  transform-origin: bottom left;
 }
 .is-top.is-outside.is-vertical-axis .tooltip__arrow {
   bottom: 100%;
@@ -1975,9 +1931,9 @@ html.adapt-scrolling body {
 .is-left.is-arrow-start.is-outside.is-vertical-axis .tooltip__arrow {
   right: calc(100% - 0.7rem - 0.35rem);
 }
-[dir="rtl"] .is-fill-height.is-arrow-start.is-outside.is-vertical-axis .tooltip__arrow,
-[dir="rtl"] .is-fill-width.is-arrow-start.is-outside.is-vertical-axis .tooltip__arrow,
-[dir="rtl"] .is-left.is-arrow-start.is-outside.is-vertical-axis .tooltip__arrow {
+.dir-rtl .is-fill-height.is-arrow-start.is-outside.is-vertical-axis .tooltip__arrow,
+.dir-rtl .is-fill-width.is-arrow-start.is-outside.is-vertical-axis .tooltip__arrow,
+.dir-rtl .is-left.is-arrow-start.is-outside.is-vertical-axis .tooltip__arrow {
   left: calc(100% - 0.7rem - 0.35rem);
   right: initial;
 }
@@ -1991,16 +1947,16 @@ html.adapt-scrolling body {
 .is-left.is-arrow-end.is-outside.is-vertical-axis .tooltip__arrow {
   right: calc(0% + 0.35rem);
 }
-[dir="rtl"] .is-fill-height.is-arrow-end.is-outside.is-vertical-axis .tooltip__arrow,
-[dir="rtl"] .is-fill-width.is-arrow-end.is-outside.is-vertical-axis .tooltip__arrow,
-[dir="rtl"] .is-left.is-arrow-end.is-outside.is-vertical-axis .tooltip__arrow {
+.dir-rtl .is-fill-height.is-arrow-end.is-outside.is-vertical-axis .tooltip__arrow,
+.dir-rtl .is-fill-width.is-arrow-end.is-outside.is-vertical-axis .tooltip__arrow,
+.dir-rtl .is-left.is-arrow-end.is-outside.is-vertical-axis .tooltip__arrow {
   left: calc(0% + 0.35rem);
   right: initial;
 }
 .is-middle.is-arrow-start.is-outside.is-vertical-axis .tooltip__arrow {
   left: calc(0% + 0.35rem);
 }
-[dir="rtl"] .is-middle.is-arrow-start.is-outside.is-vertical-axis .tooltip__arrow {
+.dir-rtl .is-middle.is-arrow-start.is-outside.is-vertical-axis .tooltip__arrow {
   right: calc(0% + 0.35rem);
   left: initial;
 }
@@ -2011,14 +1967,14 @@ html.adapt-scrolling body {
 .is-middle.is-arrow-end.is-outside.is-vertical-axis .tooltip__arrow {
   left: calc(100% - 0.7rem - 0.35rem);
 }
-[dir="rtl"] .is-middle.is-arrow-end.is-outside.is-vertical-axis .tooltip__arrow {
+.dir-rtl .is-middle.is-arrow-end.is-outside.is-vertical-axis .tooltip__arrow {
   right: calc(100% - 0.7rem - 0.35rem);
   left: initial;
 }
 .is-right.is-arrow-start.is-outside.is-vertical-axis .tooltip__arrow {
   left: calc(0% + 0.35rem);
 }
-[dir="rtl"] .is-right.is-arrow-start.is-outside.is-vertical-axis .tooltip__arrow {
+.dir-rtl .is-right.is-arrow-start.is-outside.is-vertical-axis .tooltip__arrow {
   right: calc(0% + 0.35rem);
   left: initial;
 }
@@ -2028,7 +1984,7 @@ html.adapt-scrolling body {
 .is-right.is-arrow-end.is-outside.is-vertical-axis .tooltip__arrow {
   left: calc(100% - 0.7rem - 0.35rem);
 }
-[dir="rtl"] .is-right.is-arrow-end.is-outside.is-vertical-axis .tooltip__arrow {
+.dir-rtl .is-right.is-arrow-end.is-outside.is-vertical-axis .tooltip__arrow {
   right: calc(100% - 0.7rem - 0.35rem);
   left: initial;
 }
@@ -2037,7 +1993,7 @@ html.adapt-scrolling body {
   transform: none !important;
   right: initial !important;
 }
-[dir="rtl"] .is-arrow-snap.is-arrow-start.is-outside.is-vertical-axis .tooltip__arrow {
+.dir-rtl .is-arrow-snap.is-arrow-start.is-outside.is-vertical-axis .tooltip__arrow {
   right: calc((var(--adapt-tooltip-target-distancetoedge-right) * -1) + 0.35rem) !important;
   transform: none !important;
   left: initial !important;
@@ -2047,7 +2003,7 @@ html.adapt-scrolling body {
   transform: none !important;
   left: initial !important;
 }
-[dir="rtl"] .is-arrow-snap.is-arrow-end.is-outside.is-vertical-axis .tooltip__arrow {
+.dir-rtl .is-arrow-snap.is-arrow-end.is-outside.is-vertical-axis .tooltip__arrow {
   left: calc((var(--adapt-tooltip-target-distancetoedge-left) * -1) + 0.35rem) !important;
   transform: none !important;
   right: initial !important;
@@ -2059,13 +2015,13 @@ html.adapt-scrolling body {
 .is-left.is-outside.is-horizontal-axis .tooltip__arrow::before {
   transform: translateX(99%) rotate(90deg);
 }
-[dir="rtl"] .is-left.is-outside.is-horizontal-axis .tooltip__arrow {
+.dir-rtl .is-left.is-outside.is-horizontal-axis .tooltip__arrow {
   left: 100%;
   right: initial;
   margin-left: 1rem;
   margin-right: initial;
 }
-[dir="rtl"] .is-left.is-outside.is-horizontal-axis .tooltip__arrow::before {
+.dir-rtl .is-left.is-outside.is-horizontal-axis .tooltip__arrow::before {
   transform: translateX(-99%) rotate(270deg);
 }
 .is-right.is-outside.is-horizontal-axis .tooltip__arrow {
@@ -2075,13 +2031,13 @@ html.adapt-scrolling body {
 .is-right.is-outside.is-horizontal-axis .tooltip__arrow::before {
   transform: translateX(-99%) rotate(270deg);
 }
-[dir="rtl"] .is-right.is-outside.is-horizontal-axis .tooltip__arrow {
+.dir-rtl .is-right.is-outside.is-horizontal-axis .tooltip__arrow {
   right: 100%;
   left: initial;
   margin-right: 1rem;
   margin-left: initial;
 }
-[dir="rtl"] .is-right.is-outside.is-horizontal-axis .tooltip__arrow::before {
+.dir-rtl .is-right.is-outside.is-horizontal-axis .tooltip__arrow::before {
   transform: translateX(99%) rotate(90deg);
 }
 .is-fill-height.is-arrow-start.is-outside.is-horizontal-axis .tooltip__arrow,
@@ -2130,11 +2086,56 @@ html.adapt-scrolling body {
 .is-inside .tooltip__arrow {
   display: none;
 }
-.tooltip__container .is-shown.tooltip__target {
+.tooltip .is-shown {
   animation: toolTip--fadeScaleIn 0.4s forwards;
 }
+.is-top.is-left.is-inside .tooltip__body {
+  transform-origin: top left;
+}
+.dir-rtl .is-top.is-left.is-inside .tooltip__body {
+  transform-origin: top right;
+}
+.is-top.is-middle.is-inside .tooltip__body {
+  transform-origin: top center;
+}
+.is-top.is-right.is-inside .tooltip__body {
+  transform-origin: top right;
+}
+.dir-rtl .is-top.is-right.is-inside .tooltip__body {
+  transform-origin: top left;
+}
+.is-center.is-left.is-inside .tooltip__body {
+  transform-origin: center left;
+}
+.dir-rtl .is-center.is-left.is-inside .tooltip__body {
+  transform-origin: center right;
+}
+.is-center.is-middle.is-inside .tooltip__body {
+  transform-origin: center;
+}
+.is-center.is-right.is-inside .tooltip__body {
+  transform-origin: center right;
+}
+.dir-rtl .is-center.is-right.is-inside .tooltip__body {
+  transform-origin: center left;
+}
+.is-bottom.is-left.is-inside .tooltip__body {
+  transform-origin: bottom left;
+}
+.dir-rtl .is-bottom.is-left.is-inside .tooltip__body {
+  transform-origin: bottom right;
+}
+.is-bottom.is-middle.is-inside .tooltip__body {
+  transform-origin: bottom center;
+}
+.is-bottom.is-right.is-inside .tooltip__body {
+  transform-origin: bottom right;
+}
+.dir-rtl .is-bottom.is-right.is-inside .tooltip__body {
+  transform-origin: bottom left;
+}
 @media (prefers-reduced-motion) {
-  .tooltip__container .is-shown.tooltip__target {
+  .tooltip.is-shown {
     animation: none;
   }
 }
