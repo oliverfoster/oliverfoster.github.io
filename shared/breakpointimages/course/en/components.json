@@ -1,0 +1,356 @@
+[
+    {
+        "_id": "c-05",
+        "_parentId": "b-05",
+        "_type": "component",
+        "_component": "graphic",
+        "_classes": "",
+        "_layout": "full",
+        "_isOptional": true,
+        "title": "c-10",
+        "displayTitle": "mountains 540, 900",
+        "body": "",
+        "instruction": "",
+        "_graphic": {
+            "large": "course/en/images/mountains_900.jpg",
+            "small": "course/en/images/mountains_540.jpg",
+            "alt": "",
+            "attribution": ""
+        }
+    },
+    {
+        "_id": "c-10",
+        "_parentId": "b-05",
+        "_type": "component",
+        "_component": "graphic",
+        "_classes": "",
+        "_layout": "full",
+        "_isOptional": true,
+        "title": "c-10",
+        "displayTitle": "mountains 720, 1280",
+        "body": "",
+        "instruction": "",
+        "_graphic": {
+            "large": "course/en/images/mountains_1280.jpg",
+            "small": "course/en/images/mountains_720.jpg",
+            "alt": "",
+            "attribution": ""
+        }
+    },
+    {
+        "_id": "c-15",
+        "_parentId": "b-10",
+        "_type": "component",
+        "_component": "graphic",
+        "_classes": "",
+        "_layout": "full",
+        "_isOptional": true,
+        "title": "c-10",
+        "displayTitle": "text 540, 900",
+        "body": "",
+        "instruction": "",
+        "_graphic": {
+            "large": "course/en/images/text_900.jpg",
+            "small": "course/en/images/text_540.jpg",
+            "alt": "",
+            "attribution": ""
+        }
+    },
+    {
+        "_id": "c-20",
+        "_parentId": "b-10",
+        "_type": "component",
+        "_component": "graphic",
+        "_classes": "",
+        "_layout": "full",
+        "_isOptional": true,
+        "title": "c-10",
+        "displayTitle": "text 720, 1280",
+        "body": "",
+        "instruction": "",
+        "_graphic": {
+            "large": "course/en/images/text_1280.jpg",
+            "small": "course/en/images/text_720.jpg",
+            "alt": "",
+            "attribution": ""
+        }
+    },
+    {
+        "_id": "c-21",
+        "_parentId": "b-15",
+        "_type": "component",
+        "_component": "graphic",
+        "_classes": "",
+        "_layout": "full",
+        "_isOptional": true,
+        "title": "c-10",
+        "displayTitle": "mandalas 540, 900",
+        "body": "",
+        "instruction": "",
+        "_graphic": {
+            "large": "course/en/images/mandalas_900.jpg",
+            "small": "course/en/images/mandalas_540.jpg",
+            "alt": "",
+            "attribution": ""
+        }
+    },
+    {
+        "_id": "c-25",
+        "_parentId": "b-15",
+        "_type": "component",
+        "_component": "graphic",
+        "_classes": "",
+        "_layout": "full",
+        "_isOptional": true,
+        "title": "c-10",
+        "displayTitle": "mandalas 720, 1280",
+        "body": "",
+        "instruction": "",
+        "_graphic": {
+            "large": "course/en/images/mandalas_1280.jpg",
+            "small": "course/en/images/mandalas_720.jpg",
+            "alt": "",
+            "attribution": ""
+        }
+    },
+    {
+        "_id": "c-26",
+        "_parentId": "b-20",
+        "_type": "component",
+        "_component": "graphic",
+        "_classes": "",
+        "_layout": "full",
+        "_isOptional": true,
+        "title": "c-10",
+        "displayTitle": "group 540, 900",
+        "body": "",
+        "instruction": "",
+        "_graphic": {
+            "large": "course/en/images/group_900.jpg",
+            "small": "course/en/images/group_540.jpg",
+            "alt": "",
+            "attribution": ""
+        }
+    },
+    {
+        "_id": "c-30",
+        "_parentId": "b-20",
+        "_type": "component",
+        "_component": "graphic",
+        "_classes": "",
+        "_layout": "full",
+        "_isOptional": true,
+        "title": "c-10",
+        "displayTitle": "group 720, 1280",
+        "body": "",
+        "instruction": "",
+        "_graphic": {
+            "large": "course/en/images/group_1280.jpg",
+            "small": "course/en/images/group_720.jpg",
+            "alt": "",
+            "attribution": ""
+        }
+    },
+
+    {
+        "_id": "c-35",
+        "_parentId": "b-25",
+        "_type": "component",
+        "_component": "graphic",
+        "_classes": "",
+        "_layout": "full",
+        "_isOptional": true,
+        "title": "c-10",
+        "displayTitle": "man_desk 540, 900",
+        "body": "",
+        "instruction": "",
+        "_graphic": {
+            "large": "course/en/images/man_desk_900.jpg",
+            "small": "course/en/images/man_desk_540.jpg",
+            "alt": "",
+            "attribution": ""
+        }
+    },
+    {
+        "_id": "c-36",
+        "_parentId": "b-25",
+        "_type": "component",
+        "_component": "graphic",
+        "_classes": "",
+        "_layout": "full",
+        "_isOptional": true,
+        "title": "c-10",
+        "displayTitle": "man_desk 720, 1280",
+        "body": "",
+        "instruction": "",
+        "_graphic": {
+            "large": "course/en/images/man_desk_1280.jpg",
+            "small": "course/en/images/man_desk_720.jpg",
+            "alt": "",
+            "attribution": ""
+        }
+    },
+
+
+    {
+        "_id": "c-40",
+        "_parentId": "b-30",
+        "_type": "component",
+        "_component": "graphic",
+        "_classes": "",
+        "_layout": "full",
+        "_isOptional": true,
+        "title": "c-10",
+        "displayTitle": "laptop 540, 900",
+        "body": "",
+        "instruction": "",
+        "_graphic": {
+            "large": "course/en/images/laptop_900.jpg",
+            "small": "course/en/images/laptop_540.jpg",
+            "alt": "",
+            "attribution": ""
+        }
+    },
+    {
+        "_id": "c-41",
+        "_parentId": "b-30",
+        "_type": "component",
+        "_component": "graphic",
+        "_classes": "",
+        "_layout": "full",
+        "_isOptional": true,
+        "title": "c-10",
+        "displayTitle": "laptop 720, 1280",
+        "body": "",
+        "instruction": "",
+        "_graphic": {
+            "large": "course/en/images/laptop_1280.jpg",
+            "small": "course/en/images/laptop_720.jpg",
+            "alt": "",
+            "attribution": ""
+        }
+    },
+
+
+
+    {
+        "_id": "c-45",
+        "_parentId": "b-35",
+        "_type": "component",
+        "_component": "graphic",
+        "_classes": "",
+        "_layout": "full",
+        "_isOptional": true,
+        "title": "c-10",
+        "displayTitle": "autumn 540, 900",
+        "body": "",
+        "instruction": "",
+        "_graphic": {
+            "large": "course/en/images/autumn_900.jpg",
+            "small": "course/en/images/autumn_540.jpg",
+            "alt": "",
+            "attribution": ""
+        }
+    },
+    {
+        "_id": "c-46",
+        "_parentId": "b-35",
+        "_type": "component",
+        "_component": "graphic",
+        "_classes": "",
+        "_layout": "full",
+        "_isOptional": true,
+        "title": "c-10",
+        "displayTitle": "autumn 720, 1280",
+        "body": "",
+        "instruction": "",
+        "_graphic": {
+            "large": "course/en/images/autumn_1280.jpg",
+            "small": "course/en/images/autumn_720.jpg",
+            "alt": "",
+            "attribution": ""
+        }
+    },
+
+
+
+    {
+        "_id": "c-50",
+        "_parentId": "b-40",
+        "_type": "component",
+        "_component": "graphic",
+        "_classes": "",
+        "_layout": "full",
+        "_isOptional": true,
+        "title": "c-10",
+        "displayTitle": "white_cubes 540, 900",
+        "body": "",
+        "instruction": "",
+        "_graphic": {
+            "large": "course/en/images/white_cubes_900.jpg",
+            "small": "course/en/images/white_cubes_540.jpg",
+            "alt": "",
+            "attribution": ""
+        }
+    },
+    {
+        "_id": "c-55",
+        "_parentId": "b-40",
+        "_type": "component",
+        "_component": "graphic",
+        "_classes": "",
+        "_layout": "full",
+        "_isOptional": true,
+        "title": "c-10",
+        "displayTitle": "white_cubes 720, 1280",
+        "body": "",
+        "instruction": "",
+        "_graphic": {
+            "large": "course/en/images/white_cubes_1280.jpg",
+            "small": "course/en/images/white_cubes_720.jpg",
+            "alt": "",
+            "attribution": ""
+        }
+    },
+
+
+
+    {
+        "_id": "c-60",
+        "_parentId": "b-45",
+        "_type": "component",
+        "_component": "graphic",
+        "_classes": "",
+        "_layout": "full",
+        "_isOptional": true,
+        "title": "c-10",
+        "displayTitle": "dark_man 540, 900",
+        "body": "",
+        "instruction": "",
+        "_graphic": {
+            "large": "course/en/images/dark_man_900.jpg",
+            "small": "course/en/images/dark_man_540.jpg",
+            "alt": "",
+            "attribution": ""
+        }
+    },
+    {
+        "_id": "c-65",
+        "_parentId": "b-45",
+        "_type": "component",
+        "_component": "graphic",
+        "_classes": "",
+        "_layout": "full",
+        "_isOptional": true,
+        "title": "c-10",
+        "displayTitle": "dark_man 720, 1280",
+        "body": "",
+        "instruction": "",
+        "_graphic": {
+            "large": "course/en/images/dark_man_1280.jpg",
+            "small": "course/en/images/dark_man_720.jpg",
+            "alt": "",
+            "attribution": ""
+        }
+    }
+]

@@ -1,0 +1,26 @@
+[
+    {
+        "_id": "co-05",
+        "_parentId": "course",
+        "_type": "page",
+        "_classes": "",
+        "_htmlClasses": "",
+        "title": "Breakpoint image quality test",
+        "displayTitle": "Breakpoint image quality test",
+        "body": "See how the new breakpoints impact the image quality using images at 540 and 900.",
+        "pageBody": "",
+        "instruction": "",
+        "_graphic": {
+            "src": "course/en/images/menu-item.png",
+            "alt": ""
+        },
+        "linkText": "View",
+        "duration": "2 mins",
+        "_pageLevelProgress": {
+            "_isEnabled": true,
+            "_showPageCompletion": false,
+            "_excludeAssessments": false,
+            "_isCompletionIndicatorEnabled": false
+        }
+    }
+]
