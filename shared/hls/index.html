@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="./hls.light.min.js"></script>
+</head>
+<body>
+  <script>
+    function hlsVideoAdded(video) {
+      if (!Hls.isSupported()) {
+        // hls.js is not supported on platforms that do not have Media Source Extensions (MSE) enabled.
+        // When the browser has built-in HLS support (check using `canPlayType`), we can provide an HLS manifest (i.e. .m3u8 URL) directly to the video element through the `src` property.
+        // This is using the built-in support of the plain video element, without using hls.js.
+        if (!video.canPlayType('application/vnd.apple.mpegurl')) {
+          console.warn(`No hls video support for ${video.src}`);
+        }
+        return;
+      }
+      const hls = new Hls({
+        autoLevelEnabled: true, // pick appropriate level
+        startLevel: -1, // pick best level for bandwidth to start
+        capLevelToPlayerSize: true, // restrain level to player size
+        autoStartLoad: false, // do not auto load
+        lowLatencyMode: true,
+        backBufferLength: 90,
+        workerPath: './hls.worker.js'
+      });
+      video.__hls = hls;
+      const src = video.src;
+      hls.attachMedia(video);
+      // mimic normal preload property
+      if (video.preload === 'none') {
+        const startLoad =  () => {
+          hls.loadSource(src);
+          hls.startLoad();
+          video.removeEventListener('play', startLoad)
+        }
+        video.addEventListener('play', startLoad)
+      } else if (video.preload.startsWith('meta')) {
+        hls.loadSource(src);
+        const startLoad =  () => {
+          hls.startLoad();
+          video.removeEventListener('play', startLoad)
+        }
+        video.addEventListener('play', startLoad)
+      } else {
+        hls.loadSource(src);
+        hls.startLoad();
+      }
+      // set ratio when meta data loaded
+      hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
+        video.style.aspectRatio = `${data.levels[0].width}/${data.levels[0].height}`
+        console.log(`Playing ${video.src} ${data.levels.map(level => level.height).join(',')}`)
+      });
+      // auto play for demo
+      hls.on(Hls.Events.MEDIA_ATTACHED, () => {
+        video.muted = true;
+        video.play();
+      });
+    }
+
+    function hlsVideoRemoved(video) {
+      if (!video.__hls) return;
+      video.__hls.detachMedia();
+      delete video.__hls;
+    }
+
+    class DOMModifier {
+
+      constructor({
+        elementAddFilter = () => {},
+        elementRemoveFilter = () => {},
+        onElementAdd = () => {},
+        onElementRemove = () => {}
+      }) {
+        elementAddFilter = elementAddFilter.bind(this);
+        elementRemoveFilter = elementRemoveFilter.bind(this);
+        onElementAdd = onElementAdd.bind(this);
+        onElementRemove = onElementRemove.bind(this);
+        function filter(list, prop, predicate) {
+          const nodes = list.reduce((nodes, item) => {
+            const arr = Array.prototype.slice.call(item[prop], 0);
+            return nodes.concat(arr);
+          }, []);
+          const elementNodes = nodes.filter(el => el.nodeType === 1);
+          const foundNodes = elementNodes.reduce((nodes, el) => nodes.concat([el, ...el.querySelectorAll('*')].filter(predicate)), []);
+          return foundNodes;
+        }
+        const observer = new MutationObserver((list, observer) => {
+          const added = filter(list, 'addedNodes', elementAddFilter);
+          const removed = filter(list, 'removedNodes', elementRemoveFilter);
+          if (added.length) added.forEach(onElementAdd);
+          if (removed.length) removed.forEach(onElementRemove);
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+      }
+    }
+
+    new DOMModifier({
+      elementAddFilter: el => el.tagName === 'VIDEO' && /\.m3u8/.test(el.src),
+      elementRemoveFilter: el => el.tagName === 'VIDEO' && el.__hls,
+      onElementAdd: hlsVideoAdded,
+      onElementRemove: hlsVideoRemoved
+    });
+
+  </script>
+  <video preload="meta" controls src="./build/19051606az-lagoa-30/streams.m3u8" style="width: 100%;">
+    <source src="./build/19051606az-lagoa-30/streams.m3u8" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+  <video preload="meta" controls src="./build/19062504citymischd05/streams.m3u8" style="width: 100%;">
+    <source src="./build/19062504citymischd05/streams.m3u8" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+
+</body>
+</html>
