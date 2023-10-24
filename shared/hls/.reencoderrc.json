@@ -46,14 +46,18 @@
     "-sc_threshold", 0,
     "-keyint_min", 48,
     "-start_number", 0,
+
+
     "-map", "a:0",
     "-c:a:0", "aac",
     "-b:a:0", "98k",
     "-ac:a:0", 1,
+
     "-map", "a:0",
     "-c:a:1", "aac",
     "-b:a:1", "128k",
     "-ac:a:1", 1,
+
     "-map", "a:0",
     "-c:a:2", "aac",
     "-b:a:2", "192k",
